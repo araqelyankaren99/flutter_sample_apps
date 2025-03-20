@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 
-void main() {
+Future<void> main() async{
+  await Hive.initFlutter();
   runApp(const MyApp());
 }
 
@@ -65,6 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+    doSome();
   }
 
   @override
@@ -119,4 +123,14 @@ class _MyHomePageState extends State<MyHomePage> {
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+}
+
+Future<void> doSome() async{
+  final box = await Hive.openBox<dynamic>('box');
+  await box.put('name', 'Ivan');
+  await box.put('age', 21);
+  final name =  box.get('name',defaultValue: 'name');
+  final age = box.get('age');
+  print('name = $name , age = $age');
+  await box.close();
 }
