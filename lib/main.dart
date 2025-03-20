@@ -1,4 +1,6 @@
+import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sample_apps/ffi/native_print.dart';
 
 void main() {
   runApp(const MyApp());
@@ -109,6 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
+            Text('Hello ${hello('world'.toNativeUtf8()).toDartString()}')
           ],
         ),
       ),
