@@ -3,12 +3,11 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
 
-//import 'package:DT/additions/string_extension.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-class Coordinate extends Struct {
+base class Coordinate extends Struct {
   @Double()
   external double x;
 
@@ -16,7 +15,7 @@ class Coordinate extends Struct {
   external double y;
 }
 
-class NativeDetectionResult extends Struct {
+base class NativeDetectionResult extends Struct {
   external Pointer<Coordinate> topLeft;
   external Pointer<Coordinate> topRight;
   external Pointer<Coordinate> bottomLeft;
