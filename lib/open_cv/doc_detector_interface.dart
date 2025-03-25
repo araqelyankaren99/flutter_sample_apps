@@ -82,7 +82,6 @@ typedef _CDetectDocumentEdgesFunc = Pointer<NativeDetectionResult> Function(
 //     );
 
 // Dart function signatures
-typedef _VersionFunc = Pointer<Utf8> Function();
 typedef _ProcessImageFunc = void Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef _DetectDocumentEdgesFunc = Pointer<NativeDetectionResult> Function(Pointer<Utf8>, Pointer<Utf8>);
 // typedef _DetectDocumentEdgesExFunc = Pointer<NativeDetectionResult> Function(int, int, int, Pointer<Uint8>, Pointer<Utf8>);
@@ -99,9 +98,6 @@ class DocDetectorInterface {
   DocDetectorInterface._internal() {
     _nativeLib = Platform.isAndroid ?
     DynamicLibrary.open('libnative_opencv.so') : DynamicLibrary.process();
-    // Looking for the functions
-    _getVersion = _nativeLib.lookup<NativeFunction<_CVersionFunc>>('version')
-        .asFunction();
 
     _processImage = _nativeLib
         .lookup<NativeFunction<_CProcessImageFunc>>('process_image')
@@ -118,16 +114,12 @@ class DocDetectorInterface {
   }
   static DocDetectorInterface? _instance;
 
-  late _VersionFunc _getVersion;
   late _ProcessImageFunc _processImage;
   late _DetectDocumentEdgesFunc _detectDocument;
   // late _DetectDocumentEdgesExFunc _detectDocumentEx;
 
   late DynamicLibrary _nativeLib;
 
-  String opencvVersion() {
-    return _getVersion().toDartString();
-  }
 
   void processImage(ProcessImageArguments args) {
     _processImage(
@@ -309,13 +301,3 @@ Future<NativeDetectionResult> getDocumentEdgesIsolate(Map params) async {
   return detResult;
 }
 
-class NativeOpencv {
-  NativeOpencv._();
-  static const MethodChannel _channel =
-      const MethodChannel('native_opencv');
-
-  static Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
-}
