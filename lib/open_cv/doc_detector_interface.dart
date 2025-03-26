@@ -53,9 +53,6 @@ class DetectDocumentEdgesInput {
   SendPort sendPort;
 }
 
-// C function signatures
-typedef _CVersionFunc = Pointer<Utf8> Function();
-
 typedef _CProcessImageFunc = Void Function(
     Pointer<Utf8>,
     Pointer<Utf8>,
