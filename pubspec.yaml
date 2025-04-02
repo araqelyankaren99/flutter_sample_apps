@@ -48,7 +48,9 @@ dev_dependencies:
   google_maps_flutter: ^2.11.0
   flutter_polyline_points: ^2.1.0
   geolocator: ^13.0.4
+  geocoding: ^3.0.0
   flutter_google_places_sdk: ^0.4.1
+
 
 
 # For information on the generic Dart part of this file, see the

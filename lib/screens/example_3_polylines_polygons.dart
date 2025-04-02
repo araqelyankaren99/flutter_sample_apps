@@ -44,6 +44,7 @@ class _Example3PolylinesPolygonsScreenState extends State<Example3PolylinesPolyg
     ),
   };
 
+
   @override
   Widget build(BuildContext context) {
     return GoogleMap(

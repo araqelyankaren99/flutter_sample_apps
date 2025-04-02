@@ -3,6 +3,7 @@ import 'package:flutter_sample_apps/screens/example_1_map_rendering.dart';
 import 'package:flutter_sample_apps/screens/example_2_custom_markers.dart';
 import 'package:flutter_sample_apps/screens/example_3_polylines_polygons.dart';
 import 'package:flutter_sample_apps/screens/example_4_camera_controller.dart';
+import 'package:flutter_sample_apps/screens/example_5_geocoding.dart';
 
 void main() {
   runApp(const MyApp());
@@ -37,6 +38,7 @@ class MyHomePage extends StatelessWidget {
               _Example2CustomMarkersButton(),
               _Example3PolylinesPolygonsButton(),
               _Example4CameraControllerButton(),
+              _Example5GeocodingButton(),
             ],
           ),
         ),
@@ -89,11 +91,24 @@ class _Example4CameraControllerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Polylines & Polygons'));
+    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Camera Control'));
   }
 
   void _onTap(BuildContext context){
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example4CameraControllerScreen()));
+  }
+}
+
+class _Example5GeocodingButton extends StatelessWidget {
+  const _Example5GeocodingButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Geocoding'));
+  }
+
+  void _onTap(BuildContext context){
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example5GeocodingScreen()));
   }
 }
 

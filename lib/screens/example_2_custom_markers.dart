@@ -13,7 +13,7 @@ class _Example2CustomMarkersScreenState extends State<Example2CustomMarkersScree
     Marker(
       markerId: MarkerId('marker1'),
       position: LatLng(37.7749, -122.4194),
-      infoWindow: InfoWindow(title: 'San Francisco'),
+      infoWindow: InfoWindow(title: 'Hello', snippet: 'This is San Francisco!'),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
     ),
   };
