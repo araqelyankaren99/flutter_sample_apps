@@ -96,7 +96,7 @@ class _CameraWidgetState extends State<_CameraWidget> {
         imageCache.clear();
 
         final tempFilePath = '$_appTempDirectoryPath/temp.jpeg';
-        final edgeDetectionResult =  await DocDetectorInterface()
+        final edgeDetectionResult = await DocDetectorInterface()
             .detectDocumentEdgesTest(captureImageFilePath, tempFilePath);
         final top = edgeDetectionResult.topLeft.dy;
         final left = edgeDetectionResult.bottomRight.dx;
@@ -170,12 +170,11 @@ class ResultScreen extends StatelessWidget {
     return Scaffold(
       body: croppedFilePath == null
           ? const SizedBox.shrink()
-          : Expanded(
-        child: Padding(
+          : Padding(
           padding: const EdgeInsets.all(16),
           child: Center(
             child: RotatedBox(
-              quarterTurns: 3,
+              quarterTurns: 0,
               child: Image.file(
                 File(croppedFilePath ?? ''),
                 fit: BoxFit.cover,
@@ -183,7 +182,6 @@ class ResultScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
     );
     }
   }
