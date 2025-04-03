@@ -39,6 +39,7 @@ dependencies:
   package_info_plus: ^8.3.0
   otp_autofill: ^4.1.0
   location: ^8.0.0
+  internet_connection_checker: ^1.0.0+1
 
 dev_dependencies:
   flutter_test:
