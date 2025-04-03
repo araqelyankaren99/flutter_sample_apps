@@ -51,6 +51,7 @@ dependencies:
   flutter_google_places_sdk: ^0.4.1
   marquee: ^2.3.0
   shared_preferences: ^2.5.3
+  open_file: ^3.5.10
 
 dev_dependencies:
   flutter_test:
