@@ -35,6 +35,7 @@ dependencies:
   connectivity_plus: ^6.1.3
   flutter_rating_bar: ^4.0.1
   stripe_sdk: ^5.0.0
+  device_info_plus: ^11.3.3
 
 dev_dependencies:
   flutter_test:
