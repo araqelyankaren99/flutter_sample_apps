@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sample_apps/screens/example_10_traffic.dart';
 import 'package:flutter_sample_apps/screens/example_1_map_rendering.dart';
 import 'package:flutter_sample_apps/screens/example_2_custom_markers.dart';
 import 'package:flutter_sample_apps/screens/example_3_polylines_polygons.dart';
@@ -48,6 +49,7 @@ class MyHomePage extends StatelessWidget {
               _Example7AddCurrentLocationButton(),
               _Example8AddStylingButton(),
               _Example9ClusteringButton(),
+              _Example10TrafficButton(),
             ],
           ),
         ),
@@ -170,5 +172,18 @@ class _Example9ClusteringButton extends StatelessWidget {
 
   void _onTap(BuildContext context){
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example9ClusteringScreen()));
+  }
+}
+
+class _Example10TrafficButton extends StatelessWidget {
+  const _Example10TrafficButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Traffic'));
+  }
+
+  void _onTap(BuildContext context){
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example10TrafficScreen()));
   }
 }
