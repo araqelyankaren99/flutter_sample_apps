@@ -7,7 +7,7 @@ environment:
   sdk: ^3.7.0
 dependencies:
   flutter:
-    sdk: flutter['m
+    sdk: flutter
   cupertino_icons: ^1.0.8
   google_maps_flutter: ^2.11.0
   flutter_svg: ^2.0.17
@@ -31,6 +31,7 @@ dependencies:
   progress_indicators: ^1.0.0
   uuid: ^4.5.1
   mime: ^2.0.0
+  easy_mask: ^2.0.1
 
 dev_dependencies:
   flutter_test:
