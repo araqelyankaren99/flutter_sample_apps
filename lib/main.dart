@@ -5,6 +5,7 @@ import 'package:flutter_sample_apps/screens/example_12_camera_movement.dart';
 import 'package:flutter_sample_apps/screens/example_13_geolocator.dart';
 import 'package:flutter_sample_apps/screens/example_14_measure_distance.dart';
 import 'package:flutter_sample_apps/screens/example_15_real_time_location_tracking.dart';
+import 'package:flutter_sample_apps/screens/example_16_street_view.dart';
 import 'package:flutter_sample_apps/screens/example_1_map_rendering.dart';
 import 'package:flutter_sample_apps/screens/example_2_custom_markers.dart';
 import 'package:flutter_sample_apps/screens/example_3_polylines_polygons.dart';
@@ -60,6 +61,7 @@ class MyHomePage extends StatelessWidget {
               _Example13GeolocatorButton(),
               _Example14MeasureDistanceButton(),
               _Example15RealTimeLocationTrackingButton(),
+              _Example16StreetViewButton(),
             ],
           ),
         ),
@@ -260,5 +262,18 @@ class _Example15RealTimeLocationTrackingButton extends StatelessWidget {
 
   void _onTap(BuildContext context){
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example15RealTimeLocationTrackingScreen()));
+  }
+}
+
+class _Example16StreetViewButton extends StatelessWidget {
+  const _Example16StreetViewButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Street View'));
+  }
+
+  void _onTap(BuildContext context){
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example16StreetViewScreen()));
   }
 }
