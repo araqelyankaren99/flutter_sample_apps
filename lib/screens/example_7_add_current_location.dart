@@ -61,7 +61,7 @@ class _Example7AddCurrentLocationScreenState extends State<Example7AddCurrentLoc
                 var currentLocation = await _location.getLocation();
             
                 // Move the camera to the user's location
-                _mapController.animateCamera(
+                await _mapController.animateCamera(
                   CameraUpdate.newCameraPosition(
                     CameraPosition(
                       target: LatLng(currentLocation.latitude!, currentLocation.longitude!),
