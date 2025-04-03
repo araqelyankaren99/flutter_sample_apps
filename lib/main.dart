@@ -7,6 +7,7 @@ import 'package:flutter_sample_apps/screens/example_5_geocoding.dart';
 import 'package:flutter_sample_apps/screens/example_6_directions_routing.dart';
 import 'package:flutter_sample_apps/screens/example_7_add_current_location.dart';
 import 'package:flutter_sample_apps/screens/example_8_add_styling.dart';
+import 'package:flutter_sample_apps/screens/example_9_clustering.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
+      debugShowCheckedModeBanner: false,
       home: const MyHomePage(),
     );
   }
@@ -45,6 +47,7 @@ class MyHomePage extends StatelessWidget {
               _Example6DirectionsRoutingButton(),
               _Example7AddCurrentLocationButton(),
               _Example8AddStylingButton(),
+              _Example9ClusteringButton(),
             ],
           ),
         ),
@@ -157,4 +160,15 @@ class _Example8AddStylingButton extends StatelessWidget {
   }
 }
 
+class _Example9ClusteringButton extends StatelessWidget {
+  const _Example9ClusteringButton();
 
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Clustering'));
+  }
+
+  void _onTap(BuildContext context){
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example9ClusteringScreen()));
+  }
+}
