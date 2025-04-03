@@ -38,6 +38,7 @@ dependencies:
   device_info_plus: ^11.3.3
   package_info_plus: ^8.3.0
   otp_autofill: ^4.1.0
+  location: ^8.0.0
 
 dev_dependencies:
   flutter_test:
