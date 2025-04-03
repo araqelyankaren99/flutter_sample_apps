@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sample_apps/screens/example_10_traffic.dart';
 import 'package:flutter_sample_apps/screens/example_11_markers_animation.dart';
 import 'package:flutter_sample_apps/screens/example_12_camera_movement.dart';
+import 'package:flutter_sample_apps/screens/example_13_geolocator.dart';
 import 'package:flutter_sample_apps/screens/example_1_map_rendering.dart';
 import 'package:flutter_sample_apps/screens/example_2_custom_markers.dart';
 import 'package:flutter_sample_apps/screens/example_3_polylines_polygons.dart';
@@ -54,6 +55,7 @@ class MyHomePage extends StatelessWidget {
               _Example10TrafficButton(),
               _Example11MarkersAnimationButton(),
               _Example12CameraMovementButton(),
+              _Example13GeolocatorButton(),
             ],
           ),
         ),
@@ -215,5 +217,18 @@ class _Example12CameraMovementButton extends StatelessWidget {
 
   void _onTap(BuildContext context){
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example12CameraMovementScreen()));
+  }
+}
+
+class _Example13GeolocatorButton extends StatelessWidget {
+  const _Example13GeolocatorButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Geolocator'));
+  }
+
+  void _onTap(BuildContext context){
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example13GeolocatorScreen()));
   }
 }
