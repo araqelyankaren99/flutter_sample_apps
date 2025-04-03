@@ -43,6 +43,19 @@ class _Example5GeocodingScreenState extends State<Example5GeocodingScreen> {
     }
   }
 
+  Future<String> getAddressFromLatLng(double lat, double lng) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        return '${place.name}, ${place.locality}, ${place.country}';
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+    return 'Unknown Location';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
