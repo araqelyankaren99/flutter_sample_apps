@@ -73,7 +73,7 @@ class _Example6DirectionsRoutingScreenState extends State<Example6DirectionsRout
     }
   }
 
-  Future<void> _getDirections() async {
+  Future<void> getDirections() async {
     final String url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${_origin.latitude},${_origin.longitude}&destination=${_destination.latitude},${_destination.longitude}&key=$apiKey';
 

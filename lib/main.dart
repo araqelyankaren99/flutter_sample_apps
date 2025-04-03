@@ -5,6 +5,7 @@ import 'package:flutter_sample_apps/screens/example_3_polylines_polygons.dart';
 import 'package:flutter_sample_apps/screens/example_4_camera_controller.dart';
 import 'package:flutter_sample_apps/screens/example_5_geocoding.dart';
 import 'package:flutter_sample_apps/screens/example_6_directions_routing.dart';
+import 'package:flutter_sample_apps/screens/example_7_add_current_location.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +42,7 @@ class MyHomePage extends StatelessWidget {
               _Example4CameraControllerButton(),
               _Example5GeocodingButton(),
               _Example6DirectionsRoutingButton(),
+              _Example7AddCurrentLocationButton(),
             ],
           ),
         ),
@@ -124,6 +126,19 @@ class _Example6DirectionsRoutingButton extends StatelessWidget {
 
   void _onTap(BuildContext context){
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example6DirectionsRoutingScreen()));
+  }
+}
+
+class _Example7AddCurrentLocationButton extends StatelessWidget {
+  const _Example7AddCurrentLocationButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Current Location'));
+  }
+
+  void _onTap(BuildContext context){
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example7AddCurrentLocationScreen()));
   }
 }
 

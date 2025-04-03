@@ -38,6 +38,8 @@
     <string>We need your location to show directions</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>We need your location in the background</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>We need your location in the background</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
