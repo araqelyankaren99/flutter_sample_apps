@@ -41,6 +41,25 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow access to camera to capture photos</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow access to microphone</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>User's location will be sent to the server and used to determine the nearest street address.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>User's location will be sent to the server and used to determine the nearest street address.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>User's location will be sent to the server and used to determine the nearest street address.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow access to photo library</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to track your activity across apps and websites for personalized ads.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
