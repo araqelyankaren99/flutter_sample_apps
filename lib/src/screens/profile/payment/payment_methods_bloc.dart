@@ -5,141 +5,113 @@ import 'package:flutter_sample_apps/src/screens/profile/payment/payment_methods_
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stripe_sdk/stripe_sdk.dart';
 
-class PaymentMethodsBloc
-    extends Bloc<PaymentMethodsEvent, PaymentMethodsState> {
-  PaymentMethodsBloc() : super(PaymentMethodsInitialState());
+class PaymentMethodsBloc extends Bloc<PaymentMethodsEvent, PaymentMethodsState> {
+  PaymentMethodsBloc() : super(PaymentMethodsInitialState()) {
+    on<FailedAddCardEvent>((_, emit) => emit(FailAddCardState()));
+    on<ShowPaymentMethodsEvent>(_onShowPaymentMethods);
+    on<AddPaymentMethodEvent>(_onAddPaymentMethod);
+    on<RefreshPaymentMethodsEvent>(_onRefreshPaymentMethods);
+    on<DeletePaymentMethodEvent>(_onDeletePaymentMethod);
+    on<CheckLiveOrderEvent>(_onCheckLiveOrder);
+  }
 
-  List get paymentMethods => _paymentMethods;
   List _paymentMethods = [];
+  List get paymentMethods => _paymentMethods;
+
   final _graphQlRepository = GraphQlRepository();
   bool _liveOrder = false;
 
-  @override
-  Stream<PaymentMethodsState> mapEventToState(
-    PaymentMethodsEvent event,
-  ) async* {
-    if (event is FailedAddCardEvent) {
-      yield FailAddCardState();
-    }
-
-    if (event is ShowPaymentMethodsEvent) {
-      yield* showPaymentMethodsEventToState(event);
-    }
-    if (event is AddPaymentMethodEvent) {
-      yield* addPaymentMethodEventToState(event);
-    }
-    if (event is RefreshPaymentMethodsEvent) {
-      yield* refreshPaymentMethodsEventToState(event);
-    }
-    if (event is DeletePaymentMethodEvent) {
-      yield* deletePaymentMethodEventToState(event);
-    }
-    if (event is CheckLiveOrderEvent) {
-      yield* checkLiveOrderEventToState(event);
-    }
-  }
-
-  Stream<PaymentMethodsState> addPaymentMethodEventToState(
-      AddPaymentMethodEvent event) async* {
+  Future<void> _onAddPaymentMethod(
+      AddPaymentMethodEvent event,
+      Emitter<PaymentMethodsState> emit,
+      ) async {
     initCustomer();
-    final stripeSession = CustomerSession.instance;
     try {
       final paymentMethod =
-          await stripeSession.attachPaymentMethod(event.paymentMethod['id']);
+      await CustomerSession.instance.attachPaymentMethod(event.paymentMethod['id']);
 
-      paymentMethods.add(paymentMethod);
+      _paymentMethods.add(paymentMethod);
 
-      if (paymentMethods.isEmpty) {
-        yield FailAddCardState();
-      }
-      yield AddedCardState();
-    } on Exception catch (e) {
-      yield ServerSidePaymentErrorState(message: e.toString());
-      throw Exception('Something went wrong');
-    }
-  }
-
-  Stream<PaymentMethodsState> refreshPaymentMethodsEventToState(
-      RefreshPaymentMethodsEvent event) async* {
-    await refreshPaymentMethods();
-    yield RefreshPaymentMethodsState();
-  }
-
-  Stream<PaymentMethodsState> deletePaymentMethodEventToState(
-      DeletePaymentMethodEvent event) async* {
-    await refreshPaymentMethods();
-    yield DeletePaymentMethodState();
-  }
-
-  Stream<PaymentMethodsState> checkLiveOrderEventToState(
-      CheckLiveOrderEvent event) async* {
-    final preferences = await SharedPreferences.getInstance();
-    final orderId = preferences.getString('order_id');
-    try {
-      if (orderId != null) {
-        final _orderStatusState =
-            await _graphQlRepository.getOrderStatusState(orderId);
-        _liveOrder = _hasLiveOrder(_orderStatusState);
-        if (_liveOrder) {
-          yield LiveOrderState();
-        } else {
-          yield NotLiveOrderState();
-        }
+      if (_paymentMethods.isEmpty) {
+        emit(FailAddCardState());
       } else {
-        yield NotLiveOrderState();
+        emit(AddedCardState());
       }
     } catch (e) {
-      yield ServerSidePaymentErrorState(message: 'Something went wrong!');
-      throw Exception('Something went wrong!');
+      emit(ServerSidePaymentErrorState(message: e.toString()));
     }
   }
 
-  Stream<PaymentMethodsState> showPaymentMethodsEventToState(
-      ShowPaymentMethodsEvent event) async* {
-    yield PaymentMethodsLoadingState();
+  Future<void> _onRefreshPaymentMethods(
+      RefreshPaymentMethodsEvent event,
+      Emitter<PaymentMethodsState> emit,
+      ) async {
     await refreshPaymentMethods();
-
-    yield ShowPaymentMethodsState();
+    emit(RefreshPaymentMethodsState());
   }
 
-  ///Returns existing payment methods
-  List getPaymentMethods() {
-    final _paymentMethodsList = paymentMethods;
-    return _paymentMethodsList.isEmpty ? [] : _paymentMethodsList;
+  Future<void> _onDeletePaymentMethod(
+      DeletePaymentMethodEvent event,
+      Emitter<PaymentMethodsState> emit,
+      ) async {
+    await refreshPaymentMethods();
+    emit(DeletePaymentMethodState());
   }
 
-  ///Returns current payment methods id
+  Future<void> _onCheckLiveOrder(
+      CheckLiveOrderEvent event,
+      Emitter<PaymentMethodsState> emit,
+      ) async {
+    final preferences = await SharedPreferences.getInstance();
+    final orderId = preferences.getString('order_id');
+
+    try {
+      if (orderId != null) {
+        final _orderStatusState = await _graphQlRepository.getOrderStatusState(orderId);
+        _liveOrder = _hasLiveOrder(_orderStatusState);
+        emit(_liveOrder ? LiveOrderState() : NotLiveOrderState());
+      } else {
+        emit(NotLiveOrderState());
+      }
+    } catch (_) {
+      emit(ServerSidePaymentErrorState(message: 'Something went wrong!'));
+    }
+  }
+
+  Future<void> _onShowPaymentMethods(
+      ShowPaymentMethodsEvent event,
+      Emitter<PaymentMethodsState> emit,
+      ) async {
+    emit(PaymentMethodsLoadingState());
+    await refreshPaymentMethods();
+    emit(ShowPaymentMethodsState());
+  }
+
+  List getPaymentMethods() => _paymentMethods.isEmpty ? [] : _paymentMethods;
+
   Future<void> set(String newPaymentMethod) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('defaultPaymentMethod', newPaymentMethod);
+    await prefs.setString('defaultPaymentMethod', newPaymentMethod);
   }
 
-  /// This function creates customer seesion based on ephemeral key
   void initCustomer() {
-    CustomerSession.initCustomerSession(
-        (_) => GraphQlRepository().getEphemeralKey());
+    CustomerSession.initCustomerSession((_) => _graphQlRepository.getEphemeralKey());
   }
 
-  bool _hasLiveOrder(String _orderStatusState) {
-    return _orderStatusState == 'ON ROAD' ||
-        _orderStatusState == 'WAITING' ||
-        _orderStatusState == 'UNCONFIRMED' ||
-        _orderStatusState == 'ACCEPTED';
+  bool _hasLiveOrder(String status) {
+    return ['ON ROAD', 'WAITING', 'UNCONFIRMED', 'ACCEPTED'].contains(status);
   }
 
-  /// Refreshs payment methods list
   Future<void> refreshPaymentMethods() async {
     initCustomer();
     final session = CustomerSession.instance;
-    await session.listPaymentMethods().then((value) {
-      final List listData = value['data'] ?? <PaymentMethod>[];
-      _paymentMethods = listData.isEmpty
-          ? []
-          : listData
-              .map((item) => PaymentMethod(
-                  item['id'], item['card']['last4'], item['card']['brand']))
-              .toList();
-    });
+    final value = await session.listPaymentMethods();
+    final listData = value['data'] ?? <PaymentMethod>[];
+
+    _paymentMethods = listData.isEmpty
+        ? []
+        : listData.map((item) => PaymentMethod(
+        item['id'], item['card']['last4'], item['card']['brand'])).toList();
   }
 }
 

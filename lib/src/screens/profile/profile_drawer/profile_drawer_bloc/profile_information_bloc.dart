@@ -5,9 +5,14 @@ import 'package:flutter_sample_apps/src/screens/profile/profile_drawer/profile_d
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileInformationBloc
-    extends Bloc<ProfileInformationEvent, ProfileInformationState> {
-  ProfileInformationBloc() : super(ProfileInformationInitialState());
+class ProfileInformationBloc extends Bloc<ProfileInformationEvent, ProfileInformationState> {
+  ProfileInformationBloc() : super(ProfileInformationInitialState()) {
+    on<GetProfileInformationEvent>(_onGetProfileInformationEvent);
+    on<UserEditEvent>(_onUserEditEvent);
+    on<UserLogOutEvent>(_onUserLogOutEvent);
+    on<UserPhoneNumberChangedEvent>(_onUserPhoneNumberChangedEvent);
+    on<CheckPaymentMethodEvent>(_onCheckPaymentMethodEvent);
+  }
 
   final GraphQlRepository _graphQlRepository = GraphQlRepository();
   Map<String, dynamic> userEditFields = {};
@@ -18,108 +23,41 @@ class ProfileInformationBloc
   bool _hasPaymentMethods = false;
   bool get hasPaymentMethods => _hasPaymentMethods;
 
-  @override
-  Stream<ProfileInformationState> mapEventToState(
-      ProfileInformationEvent event) async* {
-    if (event is GetProfileInformationEvent) {
-      if (_user.id == null) {
-        yield* getMainProfileInformationEventToState(event);
-      } else {
-        yield ProfileInformationLoaded();
-        yield ProfileInformationInitialState();
-      }
-    }
+  // === Event Handlers ===
 
-    if (event is UserEditEvent) {
-      yield* editProfileInformationEventToState(event);
-    }
-    if (event is UserLogOutEvent) {
-      yield* userLogOutEventToState(event);
-    }
-    if (event is UserPhoneNumberChangedEvent) {
-      yield* userPhoneNumberChangedEvent(event);
-    }
-    if (event is CheckPaymentMethodEvent) {
-      yield* checkPaymentMethodEventToState(event);
-    }
-  }
+  Future<void> _onGetProfileInformationEvent(
+      GetProfileInformationEvent event,
+      Emitter<ProfileInformationState> emit) async {
+    if (_user.id == null) {
+      emit(LoadingState());
 
-  Stream<ProfileInformationState> checkPaymentMethodEventToState(
-      CheckPaymentMethodEvent event) async* {
-    yield CheckingPaymentMethodsState();
-    try {
-      final _queryResult = await _graphQlRepository.hasPaymentMethod();
-
-      if (!_queryResult.hasException) {
-        final _data = _queryResult.data;
-        if (_data != null) {
-          final _paymentMethod = _data['paymentMethods'];
-          if (_paymentMethod.length != 0) {
-            _hasPaymentMethods = true;
-            yield ExistingPaymentMethodsState();
-          } else {
-            _hasPaymentMethods = false;
-            yield NotExistingPaymentMethodsState();
-          }
+      final _queryResult = await _graphQlRepository.getUserInfo();
+      if (_queryResult.hasException) {
+        final exception = _queryResult.exception;
+        if (exception != null) {
+          final _errorMessage = exception.graphqlErrors.first.toString();
+          emit(ProfileInformationLoadErrorState(errorMessage: _errorMessage));
         }
+        return;
       }
-    } catch (e) {
-      yield PaymentMethodsFailedState(errorMessage: 'Something went wrong');
-      throw Exception('Something went wrong');
-    }
-  }
 
-  Stream<ProfileInformationState> userPhoneNumberChangedEvent(
-      UserPhoneNumberChangedEvent event) async* {
-    yield LoadingState();
-    if (event.changedPhoneNumber != '') {
-      _user.phone = event.changedPhoneNumber;
-    }
-
-    yield ProfileInformationLoaded();
-    yield ProfileInformationInitialState();
-  }
-
-  Stream<ProfileInformationState> userLogOutEventToState(
-      UserLogOutEvent event) async* {
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.remove('token');
-    await preferences.remove('phone');
-    await preferences.remove('order_id');
-    await preferences.remove('tokenExpiredTime');
-    await preferences.remove('refreshToken');
-    await preferences.remove('refreshTokenExpiredTime');
-    _user = User();
-
-    yield UserLoggedOutState();
-    yield ProfileInformationInitialState();
-  }
-
-  Stream<ProfileInformationState> getMainProfileInformationEventToState(
-      GetProfileInformationEvent event) async* {
-    yield LoadingState();
-
-    final _queryResult = await _graphQlRepository.getUserInfo();
-    if (_queryResult.hasException) {
-      final exception = _queryResult.exception;
-      if (exception != null) {
-        final _errorMessage = exception.graphqlErrors.first.toString();
-        yield ProfileInformationLoadErrorState(errorMessage: _errorMessage);
+      final data = _queryResult.data;
+      if (data != null) {
+        _user = User.fromJson(data['thisUser']);
       }
-      return;
-    }
-    final data = _queryResult.data;
-    if (data != null) {
-      _user = User.fromJson(data['thisUser']);
-    }
 
-    yield ProfileInformationLoaded();
-    yield ProfileInformationInitialState();
+      emit(ProfileInformationLoaded());
+      emit(ProfileInformationInitialState());
+    } else {
+      emit(ProfileInformationLoaded());
+      emit(ProfileInformationInitialState());
+    }
   }
 
-  Stream<ProfileInformationState> editProfileInformationEventToState(
-      UserEditEvent event) async* {
-    yield LoadingState();
+  Future<void> _onUserEditEvent(
+      UserEditEvent event,
+      Emitter<ProfileInformationState> emit) async {
+    emit(LoadingState());
 
     if (event.user.firstName != event.userBeforeEditing.firstName) {
       userEditFields['firstName'] = '"${event.user.firstName}"';
@@ -127,12 +65,13 @@ class ProfileInformationBloc
     if (event.user.lastName != event.userBeforeEditing.lastName) {
       userEditFields['lastName'] = '"${event.user.lastName}"';
     }
-    final birthdayISOString = event.user.birthDate;
 
+    final birthdayISOString = event.user.birthDate;
     if (birthdayISOString != event.userBeforeEditing.birthDate &&
         birthdayISOString != null) {
       userEditFields['birthDate'] = '"$birthdayISOString"';
     }
+
     if (event.user.email != event.userBeforeEditing.email) {
       userEditFields['email'] = '"${event.user.email}"';
     }
@@ -144,18 +83,74 @@ class ProfileInformationBloc
 
       final exception = _queryResult.exception;
       if (_queryResult.hasException && exception != null) {
-        yield UserEditErrorState(
-            errorMessage: exception.graphqlErrors.first.message);
-
+        emit(UserEditErrorState(
+            errorMessage: exception.graphqlErrors.first.message));
         return;
       }
+
       final data = _queryResult.data;
       if (data != null) {
         final user = User.fromJson(data['editUserProfile']);
-        yield UserEditSuccessState(editedUser: user);
+        emit(UserEditSuccessState(editedUser: user));
       }
     }
 
-    yield ProfileInformationInitialState();
+    emit(ProfileInformationInitialState());
+  }
+
+  Future<void> _onUserLogOutEvent(
+      UserLogOutEvent event,
+      Emitter<ProfileInformationState> emit) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove('token');
+    await preferences.remove('phone');
+    await preferences.remove('order_id');
+    await preferences.remove('tokenExpiredTime');
+    await preferences.remove('refreshToken');
+    await preferences.remove('refreshTokenExpiredTime');
+
+    _user = User();
+    emit(UserLoggedOutState());
+    emit(ProfileInformationInitialState());
+  }
+
+  Future<void> _onUserPhoneNumberChangedEvent(
+      UserPhoneNumberChangedEvent event,
+      Emitter<ProfileInformationState> emit) async {
+    emit(LoadingState());
+
+    if (event.changedPhoneNumber != '') {
+      _user.phone = event.changedPhoneNumber;
+    }
+
+    emit(ProfileInformationLoaded());
+    emit(ProfileInformationInitialState());
+  }
+
+  Future<void> _onCheckPaymentMethodEvent(
+      CheckPaymentMethodEvent event,
+      Emitter<ProfileInformationState> emit) async {
+    emit(CheckingPaymentMethodsState());
+
+    try {
+      final _queryResult = await _graphQlRepository.hasPaymentMethod();
+
+      if (!_queryResult.hasException) {
+        final _data = _queryResult.data;
+        if (_data != null) {
+          final _paymentMethod = _data['paymentMethods'];
+          if (_paymentMethod.isNotEmpty) {
+            _hasPaymentMethods = true;
+            emit(ExistingPaymentMethodsState());
+          } else {
+            _hasPaymentMethods = false;
+            emit(NotExistingPaymentMethodsState());
+          }
+        }
+      }
+    } catch (e) {
+      emit(PaymentMethodsFailedState(errorMessage: 'Something went wrong'));
+      throw Exception('Something went wrong');
+    }
   }
 }

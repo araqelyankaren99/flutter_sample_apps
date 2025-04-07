@@ -9,8 +9,6 @@ import 'models/order.dart';
 final GraphQlRepository _graphQlRepository = GraphQlRepository();
 Order? _order;
 
-Order? get order => _order;
-
 Future<HomeScreenType>  initHomeScreen() async {
   final token = await TokenInfo.getToken();
   return _checkRegistered(token);
@@ -69,5 +67,5 @@ Future<String> _getOrderIdFromSharedPrefs() async {
 }
 
 extension HomeScreenTypeExtension on HomeScreenType {
-  Order? getOrder() => this == HomeScreenType.mapView ? order : null;
+  Order? getOrder() => this == HomeScreenType.mapView ? _order : null;
 }
