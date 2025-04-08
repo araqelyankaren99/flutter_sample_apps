@@ -46,3 +46,4 @@ app.*.map.json
 
 /ios/Pods
 /ios/Podfile.lock
+pubspec.lock
