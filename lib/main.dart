@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,27 +8,11 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
@@ -37,16 +22,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -55,61 +30,81 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  final formattersList = <String>[
+    'YYMMDD',
+    'MMDDYY',
+    'YYYYMMDD',
+    'DDMMYYYY',
+    'DDMMYYYY',
+    'MMDDYYYY',
+    'DDMMYY',
+    'YYMMMDD',
+    'DDMMMYY',
+    'MMMDDYY',
+    'YYYYMMMDD',
+    'DDMMMYYYY',
+    'MMMDDYYYY',
+    'YY/MM/DD',
+    'DD/MM/YY',
+    'MM/DD/YY',
+    'YYYY/MM/DD',
+    'DD/MM/YYYY',
+    'MM/DD/YYYY',
+    'YY/MMM/DD',
+    'DD/MMM/DD',
+    'MMM/DD/YY',
+    'YYYY/MMM/DD',
+    'DD/MMM/YY',
+    'MMM/DD/YY',
+    'YYYY/MMM/DD',
+    'DD/MMM/YYYY',
+    'MMM/DD/YYYY',
+    'MMM/DD/YYYY',
+    'YYYY-MM-DD',
+    'YYYY-MM',
+    'YYYY',
+  ];
 
   void _incrementCounter() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
       _counter++;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _hideKeyboard,
+        child: Center(
+          child: ListView(
+            children:
+              formattersList.indexed.map((entry) {
+                final index = entry.$1;
+                final formatter = entry.$2;
+
+                return Padding(
+                  padding: EdgeInsets.all(10),
+                  child: DOBTextField(
+                    dobFormatter: formatter,
+                    onFilledChanged: (bool isFilled) {
+                      debugPrint('DOB field N$index is ${isFilled ? 'filled' : 'not filled'}');
+                    },
+                    onChanged: (String value) {
+                      debugPrint('DOB field N$index changed $value');
+                    },
+                    onFullyDeleted: () {
+                      debugPrint('DOB field N$index is fully deleted');
+                    },
+                  ),
+                );
+              }).toList(),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -118,5 +113,197 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  Future<void> _hideKeyboard() async{
+    FocusScope.of(context).unfocus();
+    await SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+}
+
+class DOBTextField extends StatefulWidget {
+  const DOBTextField({
+    super.key,
+    required this.dobFormatter,
+    this.hintText = 'Date of Birth*',
+    this.textColor = Colors.black,
+    this.onFilledChanged,
+    this.onChanged,
+    this.onFullyDeleted,
+  });
+
+  final String hintText;
+  final String dobFormatter;
+  final ValueChanged<bool>? onFilledChanged;
+  final ValueChanged<String>? onChanged;
+  final VoidCallback? onFullyDeleted;
+  final Color textColor;
+
+  @override
+  DOBTextFieldState createState() => DOBTextFieldState();
+}
+
+class DOBTextFieldState extends State<DOBTextField> {
+  final _controller = TextEditingController();
+  late DOBTextInputFormatter _formatter;
+  final _focusNode = FocusNode();
+
+  String? _hintText;
+
+  @override
+  void initState() {
+    super.initState();
+    _formatter = DOBTextInputFormatter(
+      format : widget.dobFormatter,
+      onFilledChanged: widget.onFilledChanged,
+      onFullyDeleted: widget.onFullyDeleted,
+      focusNode: _focusNode,
+    );
+    _focusNode.addListener(_focusNodeListener);
+    _updateHintText();
+  }
+
+  void _focusNodeListener() {
+    if (_focusNode.hasFocus && !_formatter.hasDigits) {
+      _controller.text = _formatter.formatDisplay();
+      _controller.selection = const TextSelection.collapsed(offset: 0);
+    } else if (!_focusNode.hasFocus && !_formatter.hasDigits) {
+      _controller.text = '';
+    }
+    _updateHintText();
+  }
+
+  void _updateHintText() {
+    setState(() {
+      _hintText = _focusNode.hasFocus || _formatter.hasDigits ? null : widget.hintText;
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_focusNodeListener);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        _formatter,
+      ],
+      focusNode: _focusNode,
+      onChanged: _onChanged,
+      decoration: InputDecoration(
+        hintText: _hintText,
+        hintStyle: TextStyle(color: widget.textColor),
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      ),
+      style: TextStyle(
+        fontSize: 18,
+        color: widget.textColor,
+      ),
+    );
+  }
+
+  void _onChanged(String value){
+    widget.onChanged?.call(value);
+    _updateHintText();
+  }
+}
+
+class DOBTextInputFormatter extends TextInputFormatter {
+  DOBTextInputFormatter({
+    required this.format,
+    required this.focusNode,
+    this.onFilledChanged, this.onFullyDeleted,
+  }): _placeholders = format.split(''),
+        _separatorPositions = [],
+        _maxDigits = format.split('').where((c) => c == 'M' || c == 'D' || c == 'Y').length {
+    for (int i = 0; i < format.length; i++) {
+      if (!['M', 'D', 'Y'].contains(format[i])) {
+        _separatorPositions.add(i);
+      }
+    }
+  }
+
+  final FocusNode focusNode;
+  final String format;
+  final ValueChanged<bool>? onFilledChanged;
+  final VoidCallback? onFullyDeleted;
+
+  bool get hasDigits => _digits.isNotEmpty;
+
+  final List<String> _digits = [];
+  final List<String> _placeholders;
+  final List<int> _separatorPositions;
+  final int _maxDigits;
+  bool _isFilled = false;
+
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final newInput = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (newInput.length < _digits.length) {
+      _digits.removeLast();
+      if (_digits.isEmpty) {
+        onFullyDeleted?.call();
+        return TextEditingValue(
+          text: focusNode.hasFocus ? formatDisplay() : '',
+          selection: const TextSelection.collapsed(offset: 0),
+        );
+      }
+    } else if (newInput.length > _digits.length && newInput.length <= _maxDigits) {
+      _digits.add(newInput.characters.last);
+    }
+
+    final newIsFilled = _digits.length == _maxDigits;
+    if (newIsFilled != _isFilled) {
+      _isFilled = newIsFilled;
+      onFilledChanged?.call(_isFilled);
+    }
+
+    final formattedText = formatDisplay();
+    final cursorOffset = calculateCursorPosition(_digits.length);
+
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: cursorOffset),
+    );
+  }
+
+  String formatDisplay() {
+    final result = List.from(_placeholders);
+    int digitIndex = 0;
+    for (int i = 0; i < result.length && digitIndex < _digits.length; i++) {
+      if (['M', 'D', 'Y'].contains(result[i])) {
+        result[i] = _digits[digitIndex];
+        digitIndex++;
+      }
+    }
+    return result.join('');
+  }
+
+  int calculateCursorPosition(int digitCount) {
+    if (digitCount == 0) {
+      return 0;
+    }
+
+    int cursorPos = 0;
+    int digitsPlaced = 0;
+
+    for (int i = 0; i < format.length && digitsPlaced < digitCount; i++) {
+      if (['M', 'D', 'Y'].contains(format[i])) {
+        digitsPlaced++;
+        cursorPos = i + 1;
+      }
+    }
+    return cursorPos;
   }
 }
