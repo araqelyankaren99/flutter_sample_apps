@@ -47,6 +47,9 @@
     <key>NSMicrophoneUsageDescription</key>
     <string>Need microphone access to load our models
     </string>
+    <key>NSAppleMusicUsageDescription</key>
+    <string>This app requires access to your media library.
+    </string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

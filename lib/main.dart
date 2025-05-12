@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sample_apps/audio_classification/screen.dart';
+import 'package:flutter_sample_apps/object_detection_ssd_mobilenet/screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<void> main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Permission.camera.request();
   await Permission.microphone.request();
+  await Permission.mediaLibrary.request();
   runApp(const MyApp());
 }
 
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const AudioClassificationApp(),
+      home: const ObjectDetectionSsdMobilenet(),
     );
   }
 }
