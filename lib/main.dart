@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_sample_apps/open_cv/doc_detector_interface.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:image/image.dart' as image;
 
 void main() {
   runApp(const MyApp());
@@ -107,9 +110,14 @@ class _CameraWidgetState extends State<_CameraWidget> {
         if(!mounted){
           return;
         }
+        final result = await ImageService().rotateCameraImage(sourceImage : XFile(tempFilePath),angle : 270);
+        final resultPath = result.path;
+        if(!mounted){
+          return;
+        }
         Navigator.of(context).push(
           MaterialPageRoute(builder: (context) =>
-              ResultScreen(croppedFilePath: tempFilePath)),
+              ResultScreen(croppedFilePath: resultPath)),
         );
       }
     }
@@ -160,10 +168,17 @@ class _CameraWidgetState extends State<_CameraWidget> {
 }
 
 class ResultScreen extends StatelessWidget {
-  const ResultScreen({super.key, this.croppedFilePath});
+  const ResultScreen({
+    super.key, this.croppedFilePath,
+    this.borderRadius = 10,
+    this.borderColor = const Color(0xFF34B6FF),
+    this.width = 3,
+  });
 
   final String? croppedFilePath;
-
+  final double borderRadius;
+  final Color borderColor;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -171,17 +186,146 @@ class ResultScreen extends StatelessWidget {
       body: croppedFilePath == null
           ? const SizedBox.shrink()
           : Padding(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: RotatedBox(
-              quarterTurns: 0,
-              child: Image.file(
-                File(croppedFilePath ?? ''),
-                fit: BoxFit.cover,
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: Stack(
+                children: [
+                  Image.file(
+                    File(croppedFilePath!),
+                    fit: BoxFit.contain,
+                  ),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(borderRadius),
+                        border: Border.all(
+                          color: borderColor,
+                          width: width,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
+      ),
     );
+  }
+}
+
+class ImageService {
+  const ImageService();
+
+  ///Converting
+  Future<String> convertFileToJpeg(File file) async{
+    final bytes = file.readAsBytesSync();
+    final base64 = base64Encode(bytes);
+    final base64String = 'data:image/jpeg;base64,$base64';
+    return base64String;
+  }
+
+  Future<XFile> convertImageToXFile(
+      String path,
+      image.Image pickedImage,
+      ) async {
+    final resultPort = ReceivePort();
+    final args =
+    _ImageToXFileConvertorInput(path, pickedImage, resultPort.sendPort);
+
+    try {
+      await Isolate.spawn<_ImageToXFileConvertorInput>(
+        _convertImageToXFileIsolate,
+        args,
+        onError: resultPort.sendPort,
+        onExit: resultPort.sendPort,
+      );
+    } on Object {
+      resultPort.close();
+      throw Exception();
+    }
+    final response = await resultPort.first;
+    return response;
+  }
+
+  Future<image.Image> convertXFileToImage(XFile xFile) async {
+    final resultPort = ReceivePort();
+    final args = _XFileToImageConvertorInput(xFile, resultPort.sendPort);
+
+    try {
+      await Isolate.spawn<_XFileToImageConvertorInput>(
+        _convertXFileToImageIsolate,
+        args,
+        onError: resultPort.sendPort,
+        onExit: resultPort.sendPort,
+      );
+    } on Object {
+      resultPort.close();
+      throw Exception();
+    }
+    final response = await resultPort.first;
+    return response;
+  }
+
+  ///Rotating
+  image.Image rotateImage(
+      image.Image sourceImage, {
+        required int angle,
+      }) {
+    final rotatedImage = image.copyRotate(sourceImage, angle: angle);
+    return rotatedImage;
+  }
+
+  Future<XFile> rotateCameraImage({
+    required XFile sourceImage,
+    required int angle,
+  }) async {
+    final image = await convertXFileToImage(sourceImage);
+    final rotatedImage = rotateImage(image, angle: angle);
+    final result = await convertImageToXFile(sourceImage.path, rotatedImage);
+    return result;
+  }
+
+  Future<void> _convertImageToXFileIsolate(
+      _ImageToXFileConvertorInput imageToXFileConvertorInput,
+      ) async {
+    try {
+      final uInt8List = image.encodeJpg(imageToXFileConvertorInput.img);
+      final tempFile =
+      await File(imageToXFileConvertorInput.path).writeAsBytes(uInt8List);
+      final res = XFile(tempFile.path);
+      imageToXFileConvertorInput.sendPort.send(res);
+    } on Exception catch (_) {
+      throw Exception('Convert image to xFile failed');
     }
   }
+
+  Future<void> _convertXFileToImageIsolate(
+      _XFileToImageConvertorInput xFileToImageConvertorInput,
+      ) async {
+    final path = xFileToImageConvertorInput.xFile.path;
+    var bytes = await File(path).readAsBytes();
+    final result = image.decodeImage(bytes);
+    if (result == null) {
+      throw Exception('Convert xFile to image failed');
+    }
+    xFileToImageConvertorInput.sendPort.send(result);
+  }
+}
+
+class _XFileToImageConvertorInput {
+  const _XFileToImageConvertorInput(this.xFile, this.sendPort);
+
+  final XFile xFile;
+  final SendPort sendPort;
+}
+
+class _ImageToXFileConvertorInput {
+  const _ImageToXFileConvertorInput(this.path, this.img, this.sendPort);
+
+  final String path;
+  final image.Image img;
+  final SendPort sendPort;
+}
