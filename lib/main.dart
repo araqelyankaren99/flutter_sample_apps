@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sample_apps/object_detection_ssd_mobilenet/screen.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import 'object_detection_ssd_mobilenet_v2/screen.dart';
 
 Future<void> main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const ObjectDetectionSsdMobilenet(),
+      home: const ObjectDetectionSsdMobilenetV2Screen(),
     );
   }
 }
