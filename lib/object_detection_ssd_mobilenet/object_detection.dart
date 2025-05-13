@@ -12,12 +12,16 @@ class ObjectDetection {
   List<String>? _labels;
 
   ObjectDetection() {
-    _loadModel();
+    _init();
+  }
+
+  Future<void> _init() async {
+    _interpreter = await loadModel();
     _loadLabels();
     log('Done.');
   }
 
-  Future<void> _loadModel() async {
+  Future<Interpreter> loadModel() async {
     log('Loading interpreter options...');
     final interpreterOptions = InterpreterOptions();
 
@@ -32,8 +36,9 @@ class ObjectDetection {
     }
 
     log('Loading interpreter...');
-    _interpreter =
+    final interpreter =
     await Interpreter.fromAsset(_modelPath, options: interpreterOptions);
+    return interpreter;
   }
 
   Future<void> _loadLabels() async {
@@ -69,7 +74,7 @@ class ObjectDetection {
       ),
     );
 
-    final output = _runInference(imageMatrix);
+    final output = runInference(imageMatrix);
 
     log('Processing outputs...');
     // Location
@@ -130,7 +135,7 @@ class ObjectDetection {
     return img.encodeJpg(imageInput);
   }
 
-  List<List<Object>> _runInference(
+  List<List<Object>> runInference(
       List<List<List<num>>> imageMatrix,
       ) {
     log('Running inference...');
