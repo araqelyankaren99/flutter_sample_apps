@@ -110,14 +110,9 @@ class _CameraWidgetState extends State<_CameraWidget> {
         if(!mounted){
           return;
         }
-        final result = await ImageService().rotateCameraImage(sourceImage : XFile(tempFilePath),angle : 270);
-        final resultPath = result.path;
-        if(!mounted){
-          return;
-        }
         Navigator.of(context).push(
           MaterialPageRoute(builder: (context) =>
-              ResultScreen(croppedFilePath: resultPath)),
+              ResultScreen(croppedFilePath: tempFilePath)),
         );
       }
     }
