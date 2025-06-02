@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_sample_apps/features/notes/detail_screen.dart';
 import 'package:flutter_sample_apps/features/notes/favorites_screen.dart';
 import 'package:flutter_sample_apps/features/notes/notes_screen.dart' show NotesScreen;
@@ -48,4 +49,19 @@ final router = GoRouter(
       ],
     ),
   ],
+  errorPageBuilder: (context, state) {
+    return MaterialPage(
+      key: state.pageKey,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: Center(
+          child: Text(
+            state.error.toString(),
+            style: const TextStyle(fontSize: 18),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  },
 );
