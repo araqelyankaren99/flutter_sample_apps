@@ -1,4 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:isolate';
+
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_opencv_plugin/doc_detector_interface.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:image/image.dart' as image;
 
 void main() {
   runApp(const MyApp());
@@ -30,93 +39,289 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const _CameraWidget(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class _CameraWidget extends StatefulWidget {
+  const _CameraWidget();
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<_CameraWidget> createState() => _CameraWidgetState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _CameraWidgetState extends State<_CameraWidget> {
+  CameraController? _controller;
+  late String _appTempDirectoryPath;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+  Future<void> _initializeCamera() async {
+    final directory = await getTemporaryDirectory();
+    _appTempDirectoryPath = directory.path;
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) {
+      return;
+    }
+    _controller = CameraController(
+      cameras.first,
+      ResolutionPreset.max,
+      enableAudio: false,
+    );
+
+    await _controller?.initialize();
+    await _controller?.lockCaptureOrientation(DeviceOrientation.portraitUp);
+    _controller?.setFlashMode(FlashMode.off);
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _detectEdgesEx() async {
+    if (_controller?.value.isInitialized == true && _controller?.value.isTakingPicture == false){
+      final captureImageFile = await _controller?.takePicture();
+      if (captureImageFile == null) {
+        return;
+      }
+      final captureImageFilePath = captureImageFile.path;
+      if (!mounted || captureImageFilePath.isEmpty) {
+        return;
+      }
+
+      imageCache.clear();
+
+      final tempFilePath = '$_appTempDirectoryPath/temp.jpeg';
+      final edgeDetectionResult = await DocDetectorInterface()
+          .detectDocumentEdgesTest(captureImageFilePath, tempFilePath);
+      final top = edgeDetectionResult.topLeft.dy;
+      final left = edgeDetectionResult.bottomRight.dx;
+
+      if (top == 0.0 && left == 1.0) {
+        return;
+      }
+      if(!mounted){
+        return;
+      }
+
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) =>
+            ResultScreen(croppedFilePath: tempFilePath)),
+      );
+    }
+  }
+
+  Widget _cameraWidget() {
+    if (_controller == null) {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox.expand(
+      child: Center(
+        child: CameraPreview(_controller!),
+      ),
+    );
+  }
+
+  Widget _loaderWidget() {
+    return SizedBox.expand(
+      child: ColoredBox(
+        color: Colors.white.withAlpha((0.5 * 255).toInt()),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      body: _controller == null
+          ? _loaderWidget()
+          : _controller?.value.isInitialized == false
+          ? _loaderWidget()
+          : Stack(
+        children: [
+          _cameraWidget(),
+          Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 25),
+                child: ElevatedButton(onPressed: _detectEdgesEx, child: Icon(Icons.camera_alt)),
+              )),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+}
+
+class ResultScreen extends StatelessWidget {
+  const ResultScreen({
+    super.key, this.croppedFilePath,
+    this.borderRadius = 10,
+    this.borderColor = const Color(0xFF34B6FF),
+    this.width = 3,
+  });
+
+  final String? croppedFilePath;
+  final double borderRadius;
+  final Color borderColor;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: croppedFilePath == null
+          ? const SizedBox.shrink()
+          : Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(borderRadius),
+            child: Stack(
+              children: [
+                Image.file(
+                  File(croppedFilePath!),
+                  fit: BoxFit.contain,
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(borderRadius),
+                      border: Border.all(
+                        color: borderColor,
+                        width: width,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ImageService {
+  const ImageService();
+
+  ///Converting
+  Future<String> convertFileToJpeg(File file) async{
+    final bytes = file.readAsBytesSync();
+    final base64 = base64Encode(bytes);
+    final base64String = 'data:image/jpeg;base64,$base64';
+    return base64String;
+  }
+
+  Future<XFile> convertImageToXFile(
+      String path,
+      image.Image pickedImage,
+      ) async {
+    final resultPort = ReceivePort();
+    final args =
+    _ImageToXFileConvertorInput(path, pickedImage, resultPort.sendPort);
+
+    try {
+      await Isolate.spawn<_ImageToXFileConvertorInput>(
+        _convertImageToXFileIsolate,
+        args,
+        onError: resultPort.sendPort,
+        onExit: resultPort.sendPort,
+      );
+    } on Object {
+      resultPort.close();
+      throw Exception();
+    }
+    final response = await resultPort.first;
+    return response;
+  }
+
+  Future<image.Image> convertXFileToImage(XFile xFile) async {
+    final resultPort = ReceivePort();
+    final args = _XFileToImageConvertorInput(xFile, resultPort.sendPort);
+
+    try {
+      await Isolate.spawn<_XFileToImageConvertorInput>(
+        _convertXFileToImageIsolate,
+        args,
+        onError: resultPort.sendPort,
+        onExit: resultPort.sendPort,
+      );
+    } on Object {
+      resultPort.close();
+      throw Exception();
+    }
+    final response = await resultPort.first;
+    return response;
+  }
+
+  ///Rotating
+  image.Image rotateImage(
+      image.Image sourceImage, {
+        required int angle,
+      }) {
+    final rotatedImage = image.copyRotate(sourceImage, angle: angle);
+    return rotatedImage;
+  }
+
+  Future<XFile> rotateCameraImage({
+    required XFile sourceImage,
+    required int angle,
+  }) async {
+    final image = await convertXFileToImage(sourceImage);
+    final rotatedImage = rotateImage(image, angle: angle);
+    final result = await convertImageToXFile(sourceImage.path, rotatedImage);
+    return result;
+  }
+
+  Future<void> _convertImageToXFileIsolate(
+      _ImageToXFileConvertorInput imageToXFileConvertorInput,
+      ) async {
+    try {
+      final uInt8List = image.encodeJpg(imageToXFileConvertorInput.img);
+      final tempFile =
+      await File(imageToXFileConvertorInput.path).writeAsBytes(uInt8List);
+      final res = XFile(tempFile.path);
+      imageToXFileConvertorInput.sendPort.send(res);
+    } on Exception catch (_) {
+      throw Exception('Convert image to xFile failed');
+    }
+  }
+
+  Future<void> _convertXFileToImageIsolate(
+      _XFileToImageConvertorInput xFileToImageConvertorInput,
+      ) async {
+    final path = xFileToImageConvertorInput.xFile.path;
+    var bytes = await File(path).readAsBytes();
+    final result = image.decodeImage(bytes);
+    if (result == null) {
+      throw Exception('Convert xFile to image failed');
+    }
+    xFileToImageConvertorInput.sendPort.send(result);
+  }
+}
+
+class _XFileToImageConvertorInput {
+  const _XFileToImageConvertorInput(this.xFile, this.sendPort);
+
+  final XFile xFile;
+  final SendPort sendPort;
+}
+
+class _ImageToXFileConvertorInput {
+  const _ImageToXFileConvertorInput(this.path, this.img, this.sendPort);
+
+  final String path;
+  final image.Image img;
+  final SendPort sendPort;
 }
