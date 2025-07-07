@@ -1,7 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_sample_apps/empty_list_widget.dart';
+import 'package:flutter_sample_apps/paggination_widget.dart';
+import 'package:flutter_sample_apps/refresh_list_widget.dart';
 import 'package:http/http.dart' as http;
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,11 +35,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _scrollController = ScrollController();
+  final _refreshController = RefreshController();
+
   final List<String> _items = [];
   int _page = 1;
   bool _hasMore = true;
   bool _isLoading = false;
-  int _fetchCount = 0;
+  bool _hasError = false;
+  static const _limit = 20;
 
   @override
   void initState() {
@@ -44,81 +52,133 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    _refreshController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: NotificationListener<ScrollEndNotification>(
-          onNotification: (notification) {
-            if (notification.metrics.maxScrollExtent ==
-                notification.metrics.pixels) {
-              _getPosts();
-              return true;
-            }
-            return false;
-          },
-          child:
-              _items.isEmpty
-                  ? Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                    padding: EdgeInsets.all(8),
-                    itemCount: _items.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index < _items.length) {
-                        final item = _items[index];
-                        return ListTile(title: Text(item));
-                      } else {
-                        return Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Center(
-                            child:
-                                _hasMore
-                                    ? const CircularProgressIndicator()
-                                    : Text('No more data to load'),
-                          ),
-                        );
-                      }
-                    },
-                  ),
+        child: MyPaginationWidget(
+          onLoadMore: _getPosts,
+          child: Scrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            interactive: true,
+            child: ListRefreshWidget(
+                      scrollController: _scrollController,
+                      refreshController: _refreshController,
+                      refresh: _onRefresh,
+                      loading: _onRefreshLoading,
+                      list: _items.isEmpty
+                              ? _isLoading
+                                  ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
+                                  : const EmptyListWidget()
+                              : ListView.builder(
+                                padding: EdgeInsets.all(8),
+                                itemCount: _items.length + 1,
+                                itemBuilder: (context, index) {
+                                  if (index < _items.length) {
+                                    final item = _items[index];
+                                    return ListTile(title: Text(item));
+                                  } else {
+                                    return Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      child: Center(
+                                        child:
+                                            _hasMore
+                                                ? _hasError
+                                                    ? const Text(
+                                                      'Failed to get data',
+                                                    )
+                                                    : const CircularProgressIndicator()
+                                                : const Text(
+                                                  'No more data to load',
+                                                ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                    ),
+          ),
         ),
       ),
     );
   }
 
   Future<void> _getPosts() async {
-    _fetchCount++;
-    print('fetchCount = $_fetchCount');
-    if (_isLoading) {
+    if (_isLoading || !_hasMore) {
       return;
     }
-    _isLoading = true;
-    setState(() {});
-    const limit = 25;
-    final url = Uri.parse(
-      'https://jsonplaceholder.typicode.com/posts?_limit=$limit&_page=$_page',
-    );
-    final response = await http.get(
-      url,
-      headers: {'User-Agent': 'FlutterApp/1.0', 'Accept': 'application/json'},
-    );
-
-    final statusCode = response.statusCode;
-    final body = response.body;
-    if (statusCode == 200) {
-      final List newItems = json.decode(body);
-      if (newItems.length < limit) {
-        _hasMore = false;
-      }
-      setState(() {
-        _page++;
-        _isLoading = false;
-      });
-      _items.addAll(
-        newItems.map<String>((item) {
-          final number = item['id'];
-          return 'Item $number';
-        }),
+    try {
+      _isLoading = true;
+      _hasError = false;
+      setState(() {});
+      final url = Uri.parse(
+        'https://jsonplaceholder.typicode.com/posts?_limit=$_limit&_page=$_page',
       );
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'FlutterApp/1.0', 'Accept': 'application/json'},
+      );
+
+      final statusCode = response.statusCode;
+      final body = response.body;
+      if (statusCode == 200) {
+        final List newItems = json.decode(body);
+        if (newItems.length < _limit) {
+          _hasMore = false;
+        }
+        setState(() {
+          _page++;
+          _isLoading = false;
+          _hasError = false;
+        });
+        _items.addAll(
+          newItems.map<String>((item) {
+            final number = item['id'];
+            return 'Item $number';
+          }),
+        );
+        setState(() {});
+      } else {
+        _hasError = true;
+        setState(() {});
+      }
+    }
+    on Object catch(_){
+      _isLoading = false;
+      _hasError = true;
       setState(() {});
     }
+  }
+
+  void _onRefresh() {
+    _refreshController.refreshCompleted();
+    _clearPagination();
+    _getPosts();
+  }
+
+  void _onRefreshLoading() {
+    _refreshController.refreshCompleted();
+    _clearPagination();
+    _getPosts();
+    _refreshController.loadComplete();
+  }
+
+  void _clearPagination() {
+    _isLoading = false;
+    _items.clear();
+    _hasMore = true;
+    _page = 1;
+    _hasError = false;
   }
 }
