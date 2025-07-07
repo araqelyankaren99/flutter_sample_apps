@@ -99,7 +99,7 @@ class DocDetectorInterface {
 
   DocDetectorInterface._internal() {
     _nativeLib = Platform.isAndroid ?
-    DynamicLibrary.open('libnative_opencv.so') : DynamicLibrary.process();
+    DynamicLibrary.open('libnative_flutter_opencv_plugin.so') : DynamicLibrary.process();
     // Looking for the functions
     _getVersion = _nativeLib.lookup<NativeFunction<_CVersionFunc>>('version')
         .asFunction();
@@ -278,7 +278,7 @@ class DocDetectorInterface {
 }
 
 Future<NativeDetectionResult> getDocumentEdgesIsolate(Map params) async {
-  final nativeLib = Platform.isAndroid ? DynamicLibrary.open('libnative_opencv.so')
+  final nativeLib = Platform.isAndroid ? DynamicLibrary.open('flutter_opencv_plugin.so')
       : DynamicLibrary.process();
 
   var getDocumentPoints = nativeLib
