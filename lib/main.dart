@@ -7,6 +7,7 @@ import 'package:flutter_sample_apps/screens/example_14_measure_distance.dart';
 import 'package:flutter_sample_apps/screens/example_15_real_time_location_tracking.dart';
 import 'package:flutter_sample_apps/screens/example_16_street_view.dart';
 import 'package:flutter_sample_apps/screens/example_17_lat_lng_bounds.dart';
+import 'package:flutter_sample_apps/screens/example_18_live_tracking.dart';
 import 'package:flutter_sample_apps/screens/example_1_map_rendering.dart';
 import 'package:flutter_sample_apps/screens/example_2_custom_markers.dart';
 import 'package:flutter_sample_apps/screens/example_3_polylines_polygons.dart';
@@ -16,6 +17,7 @@ import 'package:flutter_sample_apps/screens/example_6_directions_routing.dart';
 import 'package:flutter_sample_apps/screens/example_7_add_current_location.dart';
 import 'package:flutter_sample_apps/screens/example_8_add_styling.dart';
 import 'package:flutter_sample_apps/screens/example_9_clustering.dart';
+import 'dart:developer' as developer;
 
 void main() {
   runApp(const MyApp());
@@ -64,6 +66,7 @@ class MyHomePage extends StatelessWidget {
               _Example15RealTimeLocationTrackingButton(),
               _Example16StreetViewButton(),
               _Example17LatLngBoundsButton(),
+              _Example18LiveTrackingButton(),
             ],
           ),
         ),
@@ -290,5 +293,21 @@ class _Example17LatLngBoundsButton extends StatelessWidget {
 
   void _onTap(BuildContext context){
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example17LatLngBoundsScreen()));
+  }
+}
+
+class _Example18LiveTrackingButton extends StatelessWidget {
+  const _Example18LiveTrackingButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: () => _onTap(context), child: Text('Live tracking'));
+  }
+
+  void _onTap(BuildContext context){
+    print('hello one');
+    debugPrint('hello two');
+    developer.log('hello three');
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Example18LiveTrackingScreen()));
   }
 }
