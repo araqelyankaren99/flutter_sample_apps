@@ -3,6 +3,7 @@ project(flutter_opencv_plugin)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -v")
 
 set(OPENCV_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/main/opencv)
 include_directories(${OPENCV_DIR}/include)
@@ -19,9 +20,7 @@ find_library(log-lib log)
 find_library(android-lib android)
 find_library(c-lib c)
 find_library(m-lib m)
-find_library(stdcpp-lib c++_static)
-find_library(atomic-lib atomic)
-find_library(unwind-lib unwind)   # add this
+find_library(stdcpp-lib c++_shared)
 
 add_library(flutter_opencv_plugin SHARED ../ios/Classes/native_opencv.cpp)
 
@@ -34,13 +33,5 @@ target_link_libraries(
         ${android-lib}
         ${c-lib}
         ${m-lib}
-        ${stdcpp-lib}  # c++_static now
+        ${stdcpp-lib}
 )
-
-if(atomic-lib)
-    target_link_libraries(flutter_opencv_plugin ${atomic-lib})
-endif()
-
-if(unwind-lib)
-    target_link_libraries(flutter_opencv_plugin ${unwind-lib})
-endif()

@@ -1,64 +1,53 @@
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android' version '1.8.22' apply false
+    id 'kotlin-android'
 }
 
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-
 android {
-    namespace = "com.example.flutter_opencv_plugin"
+    namespace 'com.example.flutter_opencv_plugin'
+    compileSdk 35
 
-    compileSdk = 35
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11 // Set to Java 11
+        targetCompatibility JavaVersion.VERSION_11 // Set to Java 11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11' // Set to Java 11 to match compileOptions
+    }
 
     defaultConfig {
-        minSdk = 21
-
+        minSdk 30
+        targetSdk 35
+        ndkVersion "27.0.12077973"
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-        }
-
-        externalNativeBuild {
-            cmake {
-                arguments "-DANDROID_STL=c++_static"
-            }
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
         }
     }
 
-    sourceSets {
-        main {
-            jniLibs.srcDirs = ['src/main/jniLibs']
-            java.srcDirs = ['src/main/java', 'src/main/kotlin']
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+        debug {
+            debuggable true
         }
     }
 
     externalNativeBuild {
         cmake {
-            path "CMakeLists.txt"
-            version "3.22.1"
+            path 'CMakeLists.txt'
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-
-    packagingOptions {
-        pickFirst '**/*.so'
-    }
-
-    lint {
-        disable 'InvalidPackage'
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/opencv']
+        }
     }
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
-    testImplementation "org.jetbrains.kotlin:kotlin-test"
-    testImplementation "org.mockito:mockito-core:5.0.0"
+    implementation 'androidx.annotation:annotation:1.8.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.0.21"
 }
