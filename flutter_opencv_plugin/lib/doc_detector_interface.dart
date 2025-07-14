@@ -62,6 +62,7 @@ typedef _VersionFunc = Pointer<Utf8> Function();
 typedef _ProcessImageFunc = void Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef _DetectDocumentEdgesFunc = Pointer<NativeDetectionResult> Function(Pointer<Utf8>, Pointer<Utf8>);
 
+const _androidDynamicLibraryName = 'libflutter_opencv_plugin.so';
 class DocDetectorInterface {
   factory DocDetectorInterface() {
     _instance ??= DocDetectorInterface._internal();
@@ -70,7 +71,7 @@ class DocDetectorInterface {
 
   DocDetectorInterface._internal() {
     _nativeLib = Platform.isAndroid
-        ? DynamicLibrary.open('libflutter_opencv_plugin.so') // Correct library name
+        ? DynamicLibrary.open(_androidDynamicLibraryName) // Correct library name
         : DynamicLibrary.process();
     _getVersion = _nativeLib.lookup<NativeFunction<_CVersionFunc>>('version').asFunction();
     _processImage = _nativeLib.lookup<NativeFunction<_CProcessImageFunc>>('process_image').asFunction();
@@ -180,7 +181,7 @@ class DocDetectorInterface {
 
 Future<NativeDetectionResult> getDocumentEdgesIsolate(Map params) async {
   final nativeLib = Platform.isAndroid
-      ? DynamicLibrary.open('libflutter_opencv_plugin.so') // Correct library name
+      ? DynamicLibrary.open(_androidDynamicLibraryName) // Correct library name
       : DynamicLibrary.process();
 
   final getDocumentPoints = nativeLib.lookup<
