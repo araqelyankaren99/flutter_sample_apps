@@ -182,3 +182,177 @@ class _MyHomePageState extends State<MyHomePage> {
     _hasError = false;
   }
 }
+
+
+class PaginationNotifier extends ChangeNotifier {
+  List<String> get items => _items;
+  final List<String> _items = [];
+
+  int _page = 1;
+
+  bool get hasMore => _hasMore;
+  bool _hasMore = true;
+
+  bool get isLoading => _isLoading;
+  bool _isLoading = false;
+
+  bool get hasError => _hasError;
+  bool _hasError = false;
+  static const _limit = 20;
+
+  Future<void> getPosts() async {
+    if (_isLoading || !_hasMore) {
+      return;
+    }
+    try {
+      _isLoading = true;
+      _hasError = false;
+      notifyListeners();
+      final url = Uri.parse(
+        'https://jsonplaceholder.typicode.com/posts?_limit=$_limit&_page=$_page',
+      );
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'FlutterApp/1.0', 'Accept': 'application/json'},
+      );
+
+      final statusCode = response.statusCode;
+      final body = response.body;
+      if (statusCode == 200) {
+        final List newItems = json.decode(body);
+        if (newItems.length < _limit) {
+          _hasMore = false;
+        }
+        _page++;
+        _isLoading = false;
+        _hasError = false;
+
+        notifyListeners();
+        _items.addAll(
+          newItems.map<String>((item) {
+            final number = item['id'];
+            return 'Item $number';
+          }),
+        );
+        notifyListeners();
+      } else {
+        _hasError = true;
+        notifyListeners();
+      }
+    }
+    on Object catch(_){
+      _isLoading = false;
+      _hasError = true;
+      notifyListeners();
+    }
+  }
+
+  void clearPagination() {
+    _isLoading = false;
+    _items.clear();
+    _hasMore = true;
+    _page = 1;
+    _hasError = false;
+  }
+}
+
+class _PaginationModelScreen extends StatefulWidget {
+  const _PaginationModelScreen();
+
+  @override
+  State<_PaginationModelScreen> createState() => _PaginationModelScreenState();
+}
+
+class _PaginationModelScreenState extends State<_PaginationModelScreen> {
+  final _scrollController = ScrollController();
+  final _refreshController = RefreshController();
+  final _model = PaginationNotifier();
+
+  @override
+  void initState() {
+    _model.getPosts();
+    super.initState();
+    _model.addListener(_paginationListener);
+  }
+
+  void _paginationListener() {
+    setState(() {});
+  }
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _refreshController.dispose();
+    _model.removeListener(_paginationListener);
+    _model.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: MyPaginationWidget(
+          onLoadMore: _model.getPosts,
+          child: Scrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            interactive: true,
+            child: ListRefreshWidget(
+              scrollController: _scrollController,
+              refreshController: _refreshController,
+              refresh: _onRefresh,
+              loading: _onRefreshLoading,
+              list: _model.items.isEmpty
+                  ? _model.isLoading
+                  ? const Center(
+                child: CircularProgressIndicator(),
+              )
+                  : const EmptyListWidget()
+                  : ListView.builder(
+                padding: EdgeInsets.all(8),
+                itemCount: _model.items.length + 1,
+                itemBuilder: (context, index) {
+                  if (index < _model.items.length) {
+                    final item = _model.items[index];
+                    return ListTile(title: Text(item));
+                  } else {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                      ),
+                      child: Center(
+                        child:
+                        _model.hasMore
+                            ? _model.hasError
+                            ? const Text(
+                          'Failed to get data',
+                        )
+                            : const CircularProgressIndicator()
+                            : const Text(
+                          'No more data to load',
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onRefresh() {
+    _refreshController.refreshCompleted();
+    _model.clearPagination();
+    _model.getPosts();
+  }
+
+  void _onRefreshLoading() {
+    _refreshController.refreshCompleted();
+    _model.clearPagination();
+    _model.getPosts();
+    _refreshController.loadComplete();
+  }
+}
