@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -15,6 +16,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       builder: (_, child) => TopNotificationManagerWidget(child: child),
       theme: ThemeData(
         // This is the theme of your application.
@@ -59,7 +61,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  final _networkInfo = NetworkInfo();
 
+  @override
+  void initState() {
+    super.initState();
+    _networkInfo.onInternetStatusChanged.listen(_onInternetStatusChange);
+  }
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -125,11 +133,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void showOverlay() {
-    final text = Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Center(child: Text('The lecture has been added'),),
-    );
-    context.read<TopNotificationManager>().show('Hello my friend');
+  }
+
+  void _onInternetStatusChange(bool hasInternet) {
+    if(!hasInternet){
+      context.read<TopNotificationManager>().show('Internet connection lost');
+    }
+    else {
+      context.read<TopNotificationManager>().hide();
+    }
   }
 }
 
@@ -158,7 +170,7 @@ class TopNotificationOverlayWidgetState
       _timer?.cancel();
       _timer = null;
       _textsQueue.add(text);
-      _hideWidget();
+      hide();
     } else {
       _showWidget(text);
     }
@@ -169,13 +181,10 @@ class TopNotificationOverlayWidgetState
       _text = text;
       _offset = _showedOffset;
     });
-    _timer = Timer(const Duration(seconds: 5), () {
-      _timer = null;
-      _hideWidget();
-    });
+
   }
 
-  void _hideWidget() {
+  void hide() {
     setState(() {
       _offset = _hidedOffset;
     });
@@ -198,13 +207,13 @@ class TopNotificationOverlayWidgetState
       left: 0,
       right: 0,
       child: AnimatedSlide(
-        duration: const Duration(milliseconds: 150),
+        duration: const Duration(milliseconds: 400),
         offset: _offset,
         onEnd: _onAnimationEnd,
         child: Material(
           child: Container(
             padding: EdgeInsets.only(top: topPadding),
-            color: Colors.green,
+            color: Colors.red,
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Center(
@@ -224,6 +233,8 @@ class TopNotificationOverlayWidgetState
 
 abstract class TopNotificationManager {
   void show(String text);
+
+  void hide();
 }
 
 class TopNotificationManagerWidget extends StatefulWidget {
@@ -264,5 +275,55 @@ class _TopNotificationManagerWidgetState
   @override
   void show(String text) {
     _topNotificationOverlayKey.currentState?.show(text);
+  }
+
+  @override
+  void hide() {
+    _topNotificationOverlayKey.currentState?.hide();
+  }
+}
+
+class NetworkInfo{
+  factory NetworkInfo() => _instance;
+
+  NetworkInfo._internal() {
+    _listenInternetConnection();
+  }
+  static final NetworkInfo _instance = NetworkInfo._internal();
+
+  static final _connectionChecker = InternetConnectionChecker.createInstance();
+  StreamSubscription<InternetConnectionStatus>? _connectionSubscription;
+  final _statusController = StreamController<bool>.broadcast();
+
+  Stream<bool> get onInternetStatusChanged => _statusController.stream;
+
+  bool? _lastInternetStatus;
+
+  Future<bool> get hasInternetConnection async =>
+      (await _connectionChecker.connectionStatus) ==
+          InternetConnectionStatus.connected;
+
+  Future<void> _listenInternetConnection() async {
+    final internetStatus = await hasInternetConnection;
+    _updateStatus(internetStatus);
+    _connectionSubscription =
+        _connectionChecker.onStatusChange.listen(_internetStatusListen);
+  }
+
+  void _internetStatusListen(InternetConnectionStatus connectionStatus) {
+    final hasInternet = connectionStatus == InternetConnectionStatus.connected;
+    _updateStatus(hasInternet);
+  }
+
+  void _updateStatus(bool hasInternet) {
+    if (_lastInternetStatus == hasInternet) {
+      return;
+    }
+    _lastInternetStatus = hasInternet;
+    _statusController.add(hasInternet);
+  }
+
+  Future<void> dispose() async {
+    await _connectionSubscription?.cancel();
   }
 }
