@@ -8,7 +8,7 @@
 #endif
 
 #if defined(__GNUC__)
-    // Attributes to prevent 'unused' function from being removed and to make it visible
+// Attributes to prevent 'unused' function from being removed and to make it visible
     #define FUNCTION_ATTRIBUTE __attribute__((visibility("default"))) __attribute__((used))
 #endif
 
@@ -43,8 +43,8 @@ long long int get_now() {
     ).count();
 }
 
-vector<cv::Point> detect_edges( Mat& image);
-vector<vector<cv::Point> > find_squares_ex(Mat& image);
+vector<cv::Point> detect_edges( Mat& image, string outputPath);
+vector<vector<cv::Point> > find_squares_ex(Mat& image, string outputPath);
 
 std::vector<cv::Point2f> order_points(const std::vector<cv::Point2f>& pts);
 
@@ -72,174 +72,173 @@ void platform_log(const char *fmt, ...) {
 // Avoiding name mangling
 extern "C" {
 
-    FUNCTION_ATTRIBUTE
-    const char* version() {
-        return CV_VERSION;
-    }
+FUNCTION_ATTRIBUTE
+const char* version() {
+    return CV_VERSION;
+}
 
-    FUNCTION_ATTRIBUTE
-    struct Coordinate *create_coordinate(double x, double y)
-    {
-        struct Coordinate *coordinate = (struct Coordinate *)malloc(sizeof(struct Coordinate));
-        coordinate->x = x;
-        coordinate->y = y;
-        return coordinate;
-    }
+FUNCTION_ATTRIBUTE
+struct Coordinate *create_coordinate(double x, double y)
+{
+    struct Coordinate *coordinate = (struct Coordinate *)malloc(sizeof(struct Coordinate));
+    coordinate->x = x;
+    coordinate->y = y;
+    return coordinate;
+}
 
-    FUNCTION_ATTRIBUTE
-    struct DetectionResult *create_detection_result(Coordinate *topLeft, Coordinate *topRight, Coordinate *bottomLeft, Coordinate *bottomRight)
-    {
-        struct DetectionResult *detectionResult = (struct DetectionResult *)malloc(sizeof(struct DetectionResult));
-        detectionResult->topLeft = topLeft;
-        detectionResult->topRight = topRight;
-        detectionResult->bottomLeft = bottomLeft;
-        detectionResult->bottomRight = bottomRight;
-        return detectionResult;
-    }
+FUNCTION_ATTRIBUTE
+struct DetectionResult *create_detection_result(Coordinate *topLeft, Coordinate *topRight, Coordinate *bottomLeft, Coordinate *bottomRight)
+{
+    struct DetectionResult *detectionResult = (struct DetectionResult *)malloc(sizeof(struct DetectionResult));
+    detectionResult->topLeft = topLeft;
+    detectionResult->topRight = topRight;
+    detectionResult->bottomLeft = bottomLeft;
+    detectionResult->bottomRight = bottomRight;
+    return detectionResult;
+}
 
-    FUNCTION_ATTRIBUTE
-    void process_image(char* inputImagePath, char* outputImagePath) {
-        long long start = get_now();
-        
-        Mat input = imread(inputImagePath, IMREAD_GRAYSCALE);
-        Mat threshed, withContours;
+FUNCTION_ATTRIBUTE
+void process_image(char* inputImagePath, char* outputImagePath) {
+    long long start = get_now();
 
-        vector<vector<Point>> contours;
-        vector<Vec4i> hierarchy;
-        
-        adaptiveThreshold(input, threshed, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 77, 6);
-        findContours(threshed, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_L1);
-        
-        cvtColor(threshed, withContours, COLOR_GRAY2BGR);
-        drawContours(withContours, contours, -1, Scalar(0, 255, 0), 4);
-        
-        imwrite(outputImagePath, withContours);
-        
-        int evalInMillis = static_cast<int>(get_now() - start);
-        platform_log("Processing done in %dms\n", evalInMillis);
-    }
+    Mat input = imread(inputImagePath, IMREAD_GRAYSCALE);
+    Mat threshed, withContours;
 
-    FUNCTION_ATTRIBUTE
-    struct DetectionResult* detect_document_edges_ex(
+    vector<vector<Point>> contours;
+    vector<Vec4i> hierarchy;
+
+    adaptiveThreshold(input, threshed, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 77, 6);
+    findContours(threshed, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_L1);
+
+    cvtColor(threshed, withContours, COLOR_GRAY2BGR);
+    drawContours(withContours, contours, -1, Scalar(0, 255, 0), 4);
+
+    imwrite(outputImagePath, withContours);
+
+    int evalInMillis = static_cast<int>(get_now() - start);
+    platform_log("Processing done in %dms\n", evalInMillis);
+}
+
+/// @private
+FUNCTION_ATTRIBUTE
+struct DetectionResult* detect_document_edges_ex(
         int32_t width,
         int32_t height,
         int32_t bytesPerPixel,
         u_char *imgBytes,
         char* outputImagePath) {
 
-        long long start = get_now();
+    long long start = get_now();
 
-        //*
-        platform_log("__________ done in w=%d, h=%d, perPixel=%d, path=%s\n", width, height, bytesPerPixel, outputImagePath );
+    //*
+    platform_log("__________ done in w=%d, h=%d, perPixel=%d, path=%s\n", width, height, bytesPerPixel, outputImagePath );
 
-        cv::Mat image = cv::Mat(height, width, CV_8UC(bytesPerPixel), imgBytes);
+    cv::Mat image = cv::Mat(height, width, CV_8UC(bytesPerPixel), imgBytes);
 
-        //resampleMat(image, SRC_GRAY, 0, 0, 0);
+    //resampleMat(image, SRC_GRAY, 0, 0, 0);
 
-        struct DetectionResult *coordinate = (struct DetectionResult *)malloc(sizeof(struct DetectionResult));
 
-        //cv::Mat image = cv::Mat( height, width, CV_8UC(bytesPerPixel), imgBytes);
-        if (image.size().width == 0 || image.size().height == 0) {
-            return create_detection_result(
+    //cv::Mat image = cv::Mat( height, width, CV_8UC(bytesPerPixel), imgBytes);
+    if (image.size().width == 0 || image.size().height == 0) {
+        return create_detection_result(
                 create_coordinate(0, 0),
                 create_coordinate(1, 0),
                 create_coordinate(0, 1),
                 create_coordinate(1, 1)
-            );
-        }
+        );
+    }
 
-        platform_log(" IMAGE w=%d, h=%d\n", image.size().width, image.size().height );
+    platform_log(" IMAGE w=%d, h=%d\n", image.size().width, image.size().height );
 
-        //*
-        std::vector<cv::Point> corners = detect_edges(image);
-        std::vector<cv::Point2f> sortedCorners;
-        sortedCorners.push_back(corners[0]);
-        sortedCorners.push_back(corners[1]);
-        sortedCorners.push_back(corners[2]);
-        sortedCorners.push_back(corners[3]);
+    //*
+    std::vector<cv::Point> corners = detect_edges(image, outputImagePath);
+    std::vector<cv::Point2f> sortedCorners;
+    sortedCorners.push_back(corners[0]);
+    sortedCorners.push_back(corners[1]);
+    sortedCorners.push_back(corners[2]);
+    sortedCorners.push_back(corners[3]);
 
-        platform_log(" Before ORDER POINTS");
-        std::vector<cv::Point2f> reorderedPoints = order_points(sortedCorners);
-        if (outputImagePath != 0) {
-            cv::Mat finalImage = doPerspectiveTransform(image, reorderedPoints);
-            //Mat gray0(finalImage.size(), CV_8U), gray;
-            //cvtColor(finalImage , gray, COLOR_BGR2GRAY);
+    platform_log(" Before ORDER POINTS");
+    std::vector<cv::Point2f> reorderedPoints = order_points(sortedCorners);
+    if (outputImagePath != 0) {
+        cv::Mat finalImage = doPerspectiveTransform(image, reorderedPoints);
+        //Mat gray0(finalImage.size(), CV_8U), gray;
+        //cvtColor(finalImage , gray, COLOR_BGR2GRAY);
 
-            //cv::medianBlur( gray, gray, 3);
-            //cv::threshold(gray, gray, 150, 255, cv::THRESH_BINARY);
-            //cv::adaptiveThreshold( gray, gray, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 3, 2);
-            imwrite(outputImagePath, finalImage);
-        }
+        //cv::medianBlur( gray, gray, 3);
+        //cv::threshold(gray, gray, 150, 255, cv::THRESH_BINARY);
+        //cv::adaptiveThreshold( gray, gray, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 3, 2);
+        imwrite(outputImagePath, finalImage);
+    }
 
-        platform_log(" AFTER ORDER POINTS");
+    platform_log(" AFTER ORDER POINTS");
 
-        int evalInMillis = static_cast<int>(get_now() - start);
-        platform_log("Processing done in %dms\n", evalInMillis);
+    int evalInMillis = static_cast<int>(get_now() - start);
+    platform_log("Processing done in %dms\n", evalInMillis);
 
-        return create_detection_result(
+    return create_detection_result(
             create_coordinate(sortedCorners[0].x / image.size().width, sortedCorners[0].y / image.size().height),
             create_coordinate(sortedCorners[1].x / image.size().width, sortedCorners[1].y / image.size().height),
             create_coordinate(sortedCorners[2].x / image.size().width, sortedCorners[2].y / image.size().height),
             create_coordinate(sortedCorners[3].x / image.size().width, sortedCorners[3].y / image.size().height)
-        );
-        //*/
-    }
-
-    FUNCTION_ATTRIBUTE
-    struct DetectionResult* detect_document_edges(char* inputImagePath, char* outputImagePath) {
-        long long start = get_now();
-
-        struct DetectionResult *coordinate = (struct DetectionResult *)malloc(sizeof(struct DetectionResult));
-        cv::Mat image = cv::imread(inputImagePath);
-
-        if (image.size().width == 0 || image.size().height == 0) {
-            return create_detection_result(
-                create_coordinate(0, 0),
-                create_coordinate(1, 0),
-                create_coordinate(0, 1),
-                create_coordinate(1, 1)
-            );
-        }
-
-        cv::rotate(image, image, cv::ROTATE_90_CLOCKWISE);
-
-        //vector<cv::Point> points = EdgeDetector::detect_edges_ex_plus(mat);
-
-        int evalInMillis = static_cast<int>(get_now() - start);
-        platform_log("Processing done in %dms\n", evalInMillis);
-
-        std::vector<cv::Point> corners = detect_edges(image);
-        std::vector<cv::Point2f> sortedCorners;
-        sortedCorners.push_back(corners[0]);
-        sortedCorners.push_back(corners[1]);
-        sortedCorners.push_back(corners[2]);
-        sortedCorners.push_back(corners[3]);
-
-        std::vector<cv::Point2f> reorderedPoints = order_points(sortedCorners);
-        if (outputImagePath != 0) {
-            cv::Mat finalImage = doPerspectiveTransform(image, reorderedPoints);
-            Mat gray0(finalImage.size(), CV_8U), gray;
-            cvtColor(finalImage , gray, COLOR_BGR2GRAY);
-
-            cv::medianBlur( gray, gray, 3);
-            cv::threshold(gray, gray, 150, 255, cv::THRESH_BINARY);
-            //cv::adaptiveThreshold( gray, gray, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 3, 2);
-            imwrite(outputImagePath, finalImage);
-        }
-
-        return create_detection_result(
-            create_coordinate(sortedCorners[0].x / image.size().width, sortedCorners[0].y / image.size().height),
-            create_coordinate(sortedCorners[1].x / image.size().width, sortedCorners[1].y / image.size().height),
-            create_coordinate(sortedCorners[2].x / image.size().width, sortedCorners[2].y / image.size().height),
-            create_coordinate(sortedCorners[3].x / image.size().width, sortedCorners[3].y / image.size().height)
-        );
-    }
+    );
+    //*/
 }
 
-vector<cv::Point> detect_edges( Mat& image)
+FUNCTION_ATTRIBUTE
+struct DetectionResult* detect_document_edges(char* inputImagePath, char* outputImagePath) {
+    long long start = get_now();
+
+    cv::Mat image = cv::imread(inputImagePath);
+
+    if (image.size().width == 0 || image.size().height == 0) {
+        return create_detection_result(
+                create_coordinate(0, 0),
+                create_coordinate(1, 0),
+                create_coordinate(0, 1),
+                create_coordinate(1, 1)
+        );
+    }
+
+    cv::rotate(image, image, cv::ROTATE_90_CLOCKWISE);
+
+    //vector<cv::Point> points = EdgeDetector::detect_edges_ex_plus(mat);
+
+    int evalInMillis = static_cast<int>(get_now() - start);
+    platform_log("Processing done in %dms\n", evalInMillis);
+
+    std::vector<cv::Point> corners = detect_edges(image, outputImagePath);
+    std::vector<cv::Point2f> sortedCorners;
+    sortedCorners.push_back(corners[0]);
+    sortedCorners.push_back(corners[1]);
+    sortedCorners.push_back(corners[2]);
+    sortedCorners.push_back(corners[3]);
+
+    std::vector<cv::Point2f> reorderedPoints = order_points(sortedCorners);
+    if (outputImagePath != 0) {
+        cv::Mat finalImage = doPerspectiveTransform(image, reorderedPoints);
+        Mat gray0(finalImage.size(), CV_8U), gray;
+        cvtColor(finalImage , gray, COLOR_BGR2GRAY);
+
+        cv::medianBlur( gray, gray, 3);
+        cv::threshold(gray, gray, 150, 255, cv::THRESH_BINARY);
+        //cv::adaptiveThreshold( gray, gray, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 3, 2);
+        imwrite(outputImagePath, finalImage);
+    }
+
+    return create_detection_result(
+            create_coordinate(sortedCorners[0].x / image.size().width, sortedCorners[0].y / image.size().height),
+            create_coordinate(sortedCorners[1].x / image.size().width, sortedCorners[1].y / image.size().height),
+            create_coordinate(sortedCorners[2].x / image.size().width, sortedCorners[2].y / image.size().height),
+            create_coordinate(sortedCorners[3].x / image.size().width, sortedCorners[3].y / image.size().height)
+    );
+}
+}
+
+vector<cv::Point> detect_edges( Mat& image, string outputPath)
 {
     //Mat tmpImage = debug_squares(image);
-    vector<vector<cv::Point>> squares = find_squares_ex(image);
+    vector<vector<cv::Point>> squares = find_squares_ex(image, outputPath);
     vector<cv::Point>* biggestSquare = NULL;
 
     // Sort so that the points are ordered clockwise
@@ -260,7 +259,7 @@ vector<cv::Point> detect_edges( Mat& image)
         float currentSquareWidth = get_width(*currentSquare);
         float currentSquareHeight = get_height(*currentSquare);
 
-        if (currentSquareWidth < image.size().width / 5 || currentSquareHeight < image.size().height / 5) {
+        if (currentSquareWidth < image.size().width / 5 || currentSquareHeight < image.size().height / 7) {
             continue;
         }
 
@@ -293,7 +292,7 @@ vector<cv::Point> detect_edges( Mat& image)
     return *biggestSquare;
 }
 
-vector<vector<cv::Point> > find_squares_ex(Mat& image)
+vector<vector<cv::Point> > find_squares_ex(Mat& image, string outputPath)
 {
     vector<vector<Point> > squares;
 
@@ -412,10 +411,10 @@ std::vector<cv::Point2f> calculateDestinationCorners(const std::vector<cv::Point
     int maxHeight = static_cast<int>(std::max(heightA, heightB));
 
     std::vector<cv::Point2f> destinationCorners = {
-        cv::Point2f(0, 0),
-        cv::Point2f(maxWidth, 0),
-        cv::Point2f(maxWidth, maxHeight),
-        cv::Point2f(0, maxHeight)
+            cv::Point2f(0, 0),
+            cv::Point2f(maxWidth, 0),
+            cv::Point2f(maxWidth, maxHeight),
+            cv::Point2f(0, maxHeight)
     };
 
     return destinationCorners;
@@ -464,9 +463,9 @@ vector<cv::Point> image_to_vector(Mat& image)
     int imageHeight = image.size().height;
 
     return {
-        cv::Point(0, 0),
-        cv::Point(imageWidth, 0),
-        cv::Point(0, imageHeight),
-        cv::Point(imageWidth, imageHeight)
+            cv::Point(0, 0),
+            cv::Point(imageWidth, 0),
+            cv::Point(0, imageHeight),
+            cv::Point(imageWidth, imageHeight)
     };
 }

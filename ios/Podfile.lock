@@ -1,43 +1,7 @@
 PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
-  - DartCvIOS (4.11.0.2):
-    - DartCvIOS/calib3d (= 4.11.0.2)
-    - DartCvIOS/contrib (= 4.11.0.2)
-    - DartCvIOS/core (= 4.11.0.2)
-    - DartCvIOS/features2d (= 4.11.0.2)
-    - DartCvIOS/imgproc (= 4.11.0.2)
-    - DartCvIOS/objdetect (= 4.11.0.2)
-    - DartCvIOS/photo (= 4.11.0.2)
-    - DartCvIOS/stitching (= 4.11.0.2)
-    - DartCvIOS/video (= 4.11.0.2)
-  - DartCvIOS/calib3d (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/contrib (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/core (4.11.0.2)
-  - DartCvIOS/dnn (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/features2d (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/imgproc (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/objdetect (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/photo (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/stitching (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/video (4.11.0.2):
-    - DartCvIOS/core
-  - DartCvIOS/videoio (4.11.0.2):
-    - DartCvIOS/core
   - Flutter (1.0.0)
-  - opencv_dart (0.0.1):
-    - DartCvIOS (= 4.11.0.2)
-    - DartCvIOS/dnn (= 4.11.0.2)
-    - DartCvIOS/videoio (= 4.11.0.2)
-    - Flutter
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -45,28 +9,19 @@ PODS:
 DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
-  - opencv_dart (from `.symlinks/plugins/opencv_dart/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
-
-SPEC REPOS:
-  trunk:
-    - DartCvIOS
 
 EXTERNAL SOURCES:
   camera_avfoundation:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
   Flutter:
     :path: Flutter
-  opencv_dart:
-    :path: ".symlinks/plugins/opencv_dart/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
   camera_avfoundation: dd002b0330f4981e1bbcb46ae9b62829237459a4
-  DartCvIOS: 181aa7d255854f4556b749fd5757d5a8c6a4adbb
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  opencv_dart: 0d9611b7e2da3ffd427e8df2b3ce6770a2d5f620
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
 
 PODFILE CHECKSUM: 73347e008d2110b2353f8777e7fda978816bc556
