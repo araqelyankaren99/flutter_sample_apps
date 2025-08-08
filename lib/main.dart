@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'camera_processing_screen.dart';
+import 'package:flutter_sample_apps/choose_options_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const CameraProcessingScreen(),
+      home: const ChooseOptionsScreen(),
     );
   }
 }

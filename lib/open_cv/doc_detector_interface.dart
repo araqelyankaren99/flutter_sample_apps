@@ -57,7 +57,12 @@ typedef _DartDetectDocumentEdgesStreamingExFunc =
       Pointer<Utf8>,
     );
 
-/// Bind C functions to Dart
+typedef _CDetectDocumentEdgesFunc =
+    Pointer<NativeDetectionResult> Function(Pointer<Utf8>, Pointer<Utf8>);
+
+typedef _DetectDocumentEdgesFunc =
+    Pointer<NativeDetectionResult> Function(Pointer<Utf8>, Pointer<Utf8>);
+
 class DocDetectorInterface {
   factory DocDetectorInterface() {
     _instance ??= DocDetectorInterface._internal();
@@ -68,7 +73,7 @@ class DocDetectorInterface {
 
   static DocDetectorInterface? _instance;
 
-  Future<EdgeDetectionResult> processLiveStreamImage({
+  Future<EdgeDetectionResult?> processLiveStreamImage({
     required Uint8List bytes,
     required String outputPathStr,
     required int imageWidth,
@@ -76,28 +81,55 @@ class DocDetectorInterface {
   }) async {
     final int bytesPerPixel = 4;
 
-    final result = await Isolate.run(
-      () => _processImageInIsolate(
+    final edgeDetectionResult = await Isolate.run<EdgeDetectionResult>(
+      () => _processImageInStreaming(
         width: imageWidth,
         height: imageHeight,
         bytesPerPixel: bytesPerPixel,
         rgbBytes: bytes,
-        outputPathStr : outputPathStr,
+        outputPathStr: outputPathStr,
       ),
     );
 
-    return result;
+    final top = edgeDetectionResult.topLeft.dy;
+    final left = edgeDetectionResult.bottomRight.dx;
+
+    if (top == 0.0 && left == 1.0) {
+      return null;
+    }
+    return edgeDetectionResult;
+  }
+
+  Future<EdgeDetectionResult?> detectDocumentEdgesTest(
+    String inputFilePath,
+    String outputFilePath,
+  ) async {
+    if (inputFilePath.isEmpty) {
+      return null;
+    }
+
+    final edgeDetectionResult = await Isolate.run<EdgeDetectionResult>(
+          () =>
+          _processImage(inputImage: inputFilePath, outputImage: outputFilePath),
+    );
+
+    final top = edgeDetectionResult.topLeft.dy;
+    final left = edgeDetectionResult.bottomRight.dx;
+
+    if (top == 0.0 && left == 1.0) {
+      return null;
+    }
+    return edgeDetectionResult;
   }
 }
 
-Future<EdgeDetectionResult> _processImageInIsolate({
+Future<EdgeDetectionResult> _processImageInStreaming({
   required int width,
   required int height,
   required int bytesPerPixel,
   required Uint8List rgbBytes,
   required String outputPathStr,
 }) async {
-
   final nativeLib =
       Platform.isAndroid
           ? DynamicLibrary.open('libnative_opencv.so')
@@ -136,5 +168,42 @@ Future<EdgeDetectionResult> _processImageInIsolate({
     }
   } finally {
     malloc.free(imgPointer);
+  }
+}
+
+Future<EdgeDetectionResult> _processImage({
+  required String inputImage,
+  required String outputImage,
+}) async {
+  final nativeLib =
+      Platform.isAndroid
+          ? DynamicLibrary.open('libnative_opencv.so')
+          : DynamicLibrary.process();
+
+  final detectDocument = nativeLib
+      .lookupFunction<_CDetectDocumentEdgesFunc, _DetectDocumentEdgesFunc>(
+        'detect_document_edges',
+      );
+  final Pointer<Utf8> inputPathPtr = inputImage.toNativeUtf8();
+  try {
+    final Pointer<Utf8> outputPathPtr = outputImage.toNativeUtf8();
+    try {
+      final Pointer<NativeDetectionResult> nativeResult =
+      detectDocument(
+        inputPathPtr,
+        outputPathPtr,
+      );
+      final result = nativeResult.ref;
+      return EdgeDetectionResult(
+        topLeft: Offset(result.topLeft.ref.x, result.topLeft.ref.y),
+        topRight: Offset(result.topRight.ref.x, result.topRight.ref.y),
+        bottomLeft: Offset(result.bottomLeft.ref.x, result.bottomLeft.ref.y),
+        bottomRight: Offset(result.bottomRight.ref.x, result.bottomRight.ref.y),
+      );
+    } finally {
+      malloc.free(outputPathPtr);
+    }
+  } finally {
+    malloc.free(inputPathPtr);
   }
 }

@@ -9,7 +9,6 @@
 extern "C" {
 #endif
 
-void process_image(char* inputImagePath, char* outputImagePath);
 struct DetectionResult* detect_document_edges(char* inputImagePath, char* outputImagePath);
 struct DetectionResult* detect_document_edges_streaming(
         int32_t width,

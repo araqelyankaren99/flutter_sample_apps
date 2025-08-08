@@ -97,28 +97,6 @@ struct DetectionResult *create_detection_result(Coordinate *topLeft, Coordinate 
     return detectionResult;
 }
 
-FUNCTION_ATTRIBUTE
-void process_image(char* inputImagePath, char* outputImagePath) {
-    long long start = get_now();
-
-    Mat input = imread(inputImagePath, IMREAD_GRAYSCALE);
-    Mat threshed, withContours;
-
-    vector<vector<Point>> contours;
-    vector<Vec4i> hierarchy;
-
-    adaptiveThreshold(input, threshed, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 77, 6);
-    findContours(threshed, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_L1);
-
-    cvtColor(threshed, withContours, COLOR_GRAY2BGR);
-    drawContours(withContours, contours, -1, Scalar(0, 255, 0), 4);
-
-    imwrite(outputImagePath, withContours);
-
-    int evalInMillis = static_cast<int>(get_now() - start);
-    platform_log("Processing done in %dms\n", evalInMillis);
-}
-
 /// @private
 FUNCTION_ATTRIBUTE
 struct DetectionResult* detect_document_edges_streaming(

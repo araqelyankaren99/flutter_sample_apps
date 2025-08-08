@@ -13,11 +13,5 @@ Future<EdgeDetectionResult?> processImage(CameraImage cameraImage , String outpu
     imageWidth: width,
   );
 
-  final top = edgeDetectionResult.topLeft.dy;
-  final left = edgeDetectionResult.bottomRight.dx;
-
-  if (top == 0.0 && left == 1.0) {
-    return null;
-  }
   return edgeDetectionResult;
 }
