@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_sample_apps/open_cv/doc_detector_interface.dart';
+import 'package:flutter_sample_apps/image_processor.dart';
+import 'package:flutter_sample_apps/result_screen.dart';
+import 'package:flutter_sample_apps/utils/util.dart';
 import 'package:path_provider/path_provider.dart';
-
-import 'main.dart';
 
 class CameraProcessingScreen extends StatefulWidget {
   const CameraProcessingScreen({super.key});
@@ -17,7 +19,7 @@ class _CameraProcessingScreenState extends State<CameraProcessingScreen> {
   CameraController? _cameraController;
   late String _appTempDirectoryPath;
   bool _isProcessing = false;
-  final _edgeDetectionInterface = DocDetectorInterface();
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -27,8 +29,11 @@ class _CameraProcessingScreenState extends State<CameraProcessingScreen> {
 
   @override
   void dispose() {
-    _cameraController?.stopImageStream();
+    if (_cameraController != null && _cameraController!.value.isStreamingImages) {
+      _cameraController!.stopImageStream();
+    }
     _cameraController?.dispose();
+    _deleteTempFile();
     super.dispose();
   }
 
@@ -49,52 +54,70 @@ class _CameraProcessingScreenState extends State<CameraProcessingScreen> {
     await _cameraController?.lockCaptureOrientation(DeviceOrientation.portraitUp);
     await _cameraController?.setFlashMode(FlashMode.off);
     setState(() {});
+    await Future.delayed(Duration(seconds: 2));
     _cameraController?.startImageStream(_onImageStream);
   }
 
   Future<void> _onImageStream(CameraImage cameraImage) async {
-    if (_isProcessing) {
+    if (_isProcessing || _hasNavigated) {
       return;
     }
-    await Future.delayed(Duration.zero);
+
     _isProcessing = true;
+    final outputFilePath = '$_appTempDirectoryPath/temp.jpeg';
 
     try {
-     final outputFilePath = '$_appTempDirectoryPath/temp.jpeg';
-     final edgeDetectionResult = await _edgeDetectionInterface.processLiveStreamImage(
-          cameraImage: cameraImage,
-        outputPathStr: outputFilePath,
+      final edgeDetectionResult = await processImage(
+        cameraImage,
+        outputFilePath,
       );
 
-      final top = edgeDetectionResult.topLeft.dy;
-      final left = edgeDetectionResult.bottomRight.dx;
+      if (edgeDetectionResult == null) {
+        return;
+      }
 
-      if (top == 0.0 && left == 1.0) {
+      if (!mounted) return;
+
+      _hasNavigated = true;
+      _cameraController?.stopImageStream();
+
+      if(Platform.isAndroid){
+        await rotateImage(File(outputFilePath),angle: 90);
+      }
+
+      if(!mounted){
         return;
       }
-      if (!mounted) {
-        return;
-      }
+
+      imageCache.clear();
+      imageCache.clearLiveImages();
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => ResultScreen(croppedFilePath: outputFilePath),
         ),
-          (_) => false,
+            (_) => false,
       );
-    } catch (e, st) {
-      print("Error in _onImageStream: $e\n$st");
+    } catch (_) {
+      await _deleteTempFile();
     } finally {
-      await Future.delayed(Duration.zero);
       _isProcessing = false;
+    }
+  }
+
+  Future<void> _deleteTempFile() async {
+    final file = File('$_appTempDirectoryPath/temp.jpeg');
+    if (await file.exists()) {
+      try {
+        await file.delete();
+      } catch (_) {
+       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _cameraController == null
-          ? _loaderWidget()
-          : !_cameraController!.value.isInitialized
+      body: _cameraController == null || !_cameraController!.value.isInitialized
           ? _loaderWidget()
           : CameraPreview(_cameraController!),
     );
@@ -109,4 +132,3 @@ class _CameraProcessingScreenState extends State<CameraProcessingScreen> {
     );
   }
 }
-
