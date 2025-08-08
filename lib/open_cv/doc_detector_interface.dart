@@ -39,28 +39,22 @@ class EdgeDetectionResult {
       'EdgeDetectionResult(topLeft : $topLeft ; topRight : $topRight ; bottomLeft : $bottomLeft ; bottomRight : $bottomRight)';
 }
 
-
-typedef _CDetectDocumentEdgesExCppStreamingFunc = Pointer<NativeDetectionResult> Function(
-    Int32,
-    Int32,
-    Int32,
-    Pointer<Uint8>,
-    Pointer<Utf8>,
+typedef _CDetectDocumentEdgesExCppStreamingFunc =
+    Pointer<NativeDetectionResult> Function(
+      Int32,
+      Int32,
+      Int32,
+      Pointer<Uint8>,
+      Pointer<Utf8>,
     );
 
-typedef _DartDetectDocumentEdgesStreamingExFunc = Pointer<NativeDetectionResult> Function(
-    int,
-    int,
-    int,
-    Pointer<Uint8>,
-    Pointer<Utf8>,
-    );
-
-// Dart function signatures
-typedef _ProcessImageFunc = void Function(Pointer<Utf8>, Pointer<Utf8>);
-typedef _DetectDocumentEdgesFunc = Pointer<NativeDetectionResult> Function(
-    Pointer<Utf8>,
-    Pointer<Utf8>,
+typedef _DartDetectDocumentEdgesStreamingExFunc =
+    Pointer<NativeDetectionResult> Function(
+      int,
+      int,
+      int,
+      Pointer<Uint8>,
+      Pointer<Utf8>,
     );
 
 /// Bind C functions to Dart
@@ -70,59 +64,49 @@ class DocDetectorInterface {
     return _instance!;
   }
 
-  DocDetectorInterface._internal() {
-    _nativeLib = Platform.isAndroid
-        ? DynamicLibrary.open('libnative_opencv.so')
-        : DynamicLibrary.process();
+  DocDetectorInterface._internal();
 
-    _detectDocumentStreaming = _nativeLib
-        .lookup<NativeFunction<_CDetectDocumentEdgesExCppStreamingFunc>>(
-      'detect_document_edges_streaming',
-    )
-        .asFunction();
-  }
   static DocDetectorInterface? _instance;
-  late _DartDetectDocumentEdgesStreamingExFunc _detectDocumentStreaming;
-  late DynamicLibrary _nativeLib;
-
 
   Future<EdgeDetectionResult> processLiveStreamImage({
     required Uint8List bytes,
     required String outputPathStr,
     required int imageWidth,
     required int imageHeight,
-    required
   }) async {
     final int bytesPerPixel = 4;
 
-    final result = await Isolate.run(() => _processImageInIsolate({
-      'width': imageWidth,
-      'height': imageHeight,
-      'bytesPerPixel': bytesPerPixel,
-      'rgbBytes': bytes,
-      'outputPathStr': outputPathStr,
-    }));
+    final result = await Isolate.run(
+      () => _processImageInIsolate(
+        width: imageWidth,
+        height: imageHeight,
+        bytesPerPixel: bytesPerPixel,
+        rgbBytes: bytes,
+        outputPathStr : outputPathStr,
+      ),
+    );
 
     return result;
   }
 }
 
-Future<EdgeDetectionResult> _processImageInIsolate(Map<String, dynamic> args) async {
-  final int width = args['width'];
-  final int height = args['height'];
-  final int bytesPerPixel = args['bytesPerPixel'];
-  final Uint8List rgbBytes = args['rgbBytes'];
-  final String outputPathStr = args['outputPathStr'];
+Future<EdgeDetectionResult> _processImageInIsolate({
+  required int width,
+  required int height,
+  required int bytesPerPixel,
+  required Uint8List rgbBytes,
+  required String outputPathStr,
+}) async {
 
-  final nativeLib = Platform.isAndroid
-      ? DynamicLibrary.open('libnative_opencv.so')
-      : DynamicLibrary.process();
+  final nativeLib =
+      Platform.isAndroid
+          ? DynamicLibrary.open('libnative_opencv.so')
+          : DynamicLibrary.process();
 
   final detectDocumentStreaming = nativeLib.lookupFunction<
-      Pointer<NativeDetectionResult> Function(
-          Int32, Int32, Int32, Pointer<Uint8>, Pointer<Utf8>),
-      Pointer<NativeDetectionResult> Function(
-          int, int, int, Pointer<Uint8>, Pointer<Utf8>)>('detect_document_edges_streaming');
+    _CDetectDocumentEdgesExCppStreamingFunc,
+    _DartDetectDocumentEdgesStreamingExFunc
+  >('detect_document_edges_streaming');
 
   final Pointer<Uint8> imgPointer = malloc.allocate<Uint8>(rgbBytes.length);
   try {
@@ -130,13 +114,14 @@ Future<EdgeDetectionResult> _processImageInIsolate(Map<String, dynamic> args) as
 
     final Pointer<Utf8> outputPathPtr = outputPathStr.toNativeUtf8();
     try {
-      final Pointer<NativeDetectionResult> nativeResult = detectDocumentStreaming(
-        width,
-        height,
-        bytesPerPixel,
-        imgPointer,
-        outputPathPtr,
-      );
+      final Pointer<NativeDetectionResult> nativeResult =
+          detectDocumentStreaming(
+            width,
+            height,
+            bytesPerPixel,
+            imgPointer,
+            outputPathPtr,
+          );
 
       final result = nativeResult.ref;
 
