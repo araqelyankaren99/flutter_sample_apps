@@ -121,7 +121,7 @@ void process_image(char* inputImagePath, char* outputImagePath) {
 
 /// @private
 FUNCTION_ATTRIBUTE
-struct DetectionResult* detect_document_edges_ex(
+struct DetectionResult* detect_document_edges_streaming(
         int32_t width,
         int32_t height,
         int32_t bytesPerPixel,

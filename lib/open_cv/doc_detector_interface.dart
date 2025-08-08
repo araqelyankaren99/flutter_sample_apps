@@ -77,7 +77,7 @@ class DocDetectorInterface {
 
     _detectDocumentStreaming = _nativeLib
         .lookup<NativeFunction<_CDetectDocumentEdgesExCppStreamingFunc>>(
-      'detect_document_edges_ex',
+      'detect_document_edges_streaming',
     )
         .asFunction();
   }
@@ -122,7 +122,7 @@ Future<EdgeDetectionResult> _processImageInIsolate(Map<String, dynamic> args) as
       Pointer<NativeDetectionResult> Function(
           Int32, Int32, Int32, Pointer<Uint8>, Pointer<Utf8>),
       Pointer<NativeDetectionResult> Function(
-          int, int, int, Pointer<Uint8>, Pointer<Utf8>)>('detect_document_edges_ex');
+          int, int, int, Pointer<Uint8>, Pointer<Utf8>)>('detect_document_edges_streaming');
 
   final Pointer<Uint8> imgPointer = malloc.allocate<Uint8>(rgbBytes.length);
   try {
