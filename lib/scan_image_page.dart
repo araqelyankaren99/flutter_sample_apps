@@ -64,7 +64,7 @@ class _ScanImagePageState extends State<ScanImagePage> {
       imageCache.clear();
 
       final tempFilePath = '$_appTempDirectoryPath/temp.jpeg';
-      final edgeDetectionResult =  await DocDetectorInterface()
+      final edgeDetectionResult =  await OpenCvEdgeDetector()
           .detectDocumentEdgesTest(captureImageFilePath, tempFilePath);
       if(edgeDetectionResult == null){
         return;

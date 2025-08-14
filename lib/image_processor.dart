@@ -6,7 +6,7 @@ Future<EdgeDetectionResult?> processImage(CameraImage cameraImage , String outpu
   final bytes = convertCameraImageToUint8List(cameraImage);
   final width = cameraImage.width;
   final height = cameraImage.height;
-  final edgeDetectionResult = await DocDetectorInterface().processLiveStreamImage(
+  final edgeDetectionResult = await OpenCvEdgeDetector().processLiveStreamImage(
     bytes: bytes,
     outputPathStr: outputFilePath,
     imageHeight: height,
