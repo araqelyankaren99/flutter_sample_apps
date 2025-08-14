@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace 'com.example.flutter_opencv_plugin'
-    compileSdk 35
+    compileSdk flutter.compileSdkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
@@ -17,10 +17,7 @@ android {
     }
 
     defaultConfig {
-        minSdk 30
-        targetSdk 35
-        ndkVersion "27.0.12077973"
-
+        minSdk 23
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17 -fexceptions -frtti -static-libstdc++"
