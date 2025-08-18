@@ -1,0 +1,27 @@
+{
+  "buildFiles": [
+    "/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/karenkhzmalyan/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/.cxx/Debug/6e421452/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/karenkhzmalyan/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/.cxx/Debug/6e421452/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "flutter_opencv_plugin::@6890427a1f51a3e7e1df": {
+      "artifactName": "flutter_opencv_plugin",
+      "abi": "arm64-v8a",
+      "output": "/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/build/flutter_opencv_plugin/intermediates/cxx/Debug/6e421452/obj/arm64-v8a/libflutter_opencv_plugin.so",
+      "runtimeFiles": []
+    }
+  }
+}

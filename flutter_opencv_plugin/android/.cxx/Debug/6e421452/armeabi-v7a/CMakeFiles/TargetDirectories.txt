@@ -1,0 +1,3 @@
+/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/.cxx/Debug/6e421452/armeabi-v7a/CMakeFiles/flutter_opencv_plugin.dir
+/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/.cxx/Debug/6e421452/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/.cxx/Debug/6e421452/armeabi-v7a/CMakeFiles/rebuild_cache.dir

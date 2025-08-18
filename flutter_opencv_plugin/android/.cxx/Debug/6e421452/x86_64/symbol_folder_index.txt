@@ -1,0 +1,1 @@
+/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/build/flutter_opencv_plugin/intermediates/cxx/Debug/6e421452/obj/x86_64

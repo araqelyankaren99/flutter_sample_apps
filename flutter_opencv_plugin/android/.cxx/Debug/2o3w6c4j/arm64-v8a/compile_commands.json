@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/.cxx/Debug/2o3w6c4j/arm64-v8a",
+  "command": "/Users/karenkhzmalyan/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ --target=aarch64-none-linux-android21 --sysroot=/Users/karenkhzmalyan/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dflutter_opencv_plugin_EXPORTS -I/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/src/main/opencv/include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++17 -fexceptions -frtti -static-libstdc++ -fopenmp -static-openmp -fno-limit-debug-info  -fPIC -o CMakeFiles/flutter_opencv_plugin.dir/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/ios/Classes/native_opencv.cpp.o -c /Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/ios/Classes/native_opencv.cpp",
+  "file": "/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/ios/Classes/native_opencv.cpp"
+}
+]

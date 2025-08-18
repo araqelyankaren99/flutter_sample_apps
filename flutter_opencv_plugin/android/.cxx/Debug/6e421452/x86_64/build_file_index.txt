@@ -1,0 +1,1 @@
+/Users/karenkhzmalyan/Desktop/projects/flutter_sample_apps/flutter_opencv_plugin/android/CMakeLists.txt
