@@ -18,6 +18,10 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>NSCameraUsageDescription</key>
+    <string>Camera permission is required for scanning your images.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Media library permission is required for scanning your images.</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
