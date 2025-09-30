@@ -31,38 +31,48 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final formattersList = <String>[
-    'YYMMDD',
-    'MMDDYY',
-    'YYYYMMDD',
-    'DDMMYYYY',
-    'DDMMYYYY',
-    'MMDDYYYY',
-    'DDMMYY',
-    'YYMMMDD',
-    'DDMMMYY',
-    'MMMDDYY',
-    'YYYYMMMDD',
-    'DDMMMYYYY',
-    'MMMDDYYYY',
-    'YY/MM/DD',
-    'DD/MM/YY',
-    'MM/DD/YY',
-    'YYYY/MM/DD',
-    'DD/MM/YYYY',
-    'MM/DD/YYYY',
-    'YY/MMM/DD',
-    'DD/MMM/DD',
-    'MMM/DD/YY',
-    'YYYY/MMM/DD',
-    'DD/MMM/YY',
-    'MMM/DD/YY',
-    'YYYY/MMM/DD',
-    'DD/MMM/YYYY',
-    'MMM/DD/YYYY',
-    'MMM/DD/YYYY',
-    'YYYY-MM-DD',
-    'YYYY-MM',
-    'YYYY',
+    // Numeric formats
+    'YYMMDD', 'MMDDYY', 'YYYYMMDD', 'DDMMYYYY', 'MMDDYYYY', 'DDMMYY',
+    'YYYYMM', 'YYYY', 'YYYY-MM-DD', 'YYYY-MM', 'DD-MM-YYYY', 'MM-DD-YYYY',
+    'DD-MM-YY', 'MM-DD-YY', 'YY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY',
+    'DD/MM/YY', 'MM/DD/YY', 'YY/MM/DD', 'YYYY/MM/DD', 'YYYY/MM',
+    'DD.MM.YYYY', 'MM.DD.YYYY', 'DD.MM.YY', 'MM.DD.YY', 'YY.MM.DD', 'YYYY.MM.DD',
+
+    // Abbreviated month names (MMM)
+    'YYMMMDD', 'DDMMMYY', 'MMMDDYY', 'YYYYMMMDD', 'DDMMMYYYY', 'MMMDDYYYY',
+    'YY/MMM/DD', 'DD/MMM/YY', 'MMM/DD/YY', 'YYYY/MMM/DD', 'DD/MMM/YYYY', 'MMM/DD/YYYY',
+    'YY-MMM-DD', 'DD-MMM-YY', 'MMM-DD-YY', 'YYYY-MMM-DD', 'DD-MMM-YYYY', 'MMM-DD-YYYY',
+    'YY MMM DD', 'DD MMM YY', 'MMM DD YY', 'YYYY MMM DD', 'DD MMM YYYY', 'MMM DD YYYY',
+
+    // Abbreviated month lowercase
+    'YYmmmDD', 'DDmmmYY', 'mmmDDYY', 'YYYYmmmDD', 'DDmmmYYYY', 'mmmDDYYYY',
+    'YY/mmm/DD', 'DD/mmm/YY', 'mmm/DD/YY', 'YYYY/mmm/DD', 'DD/mmm/YYYY', 'mmm/DD/YYYY',
+    'YY-mmm-DD', 'DD-mmm-YY', 'mmm-DD-YY', 'YYYY-mmm-DD', 'DD-mmm-YYYY', 'mmm-DD-YYYY',
+    'YY mmm DD', 'DD mmm YY', 'mmm DD YY', 'YYYY mmm DD', 'DD mmm YYYY', 'mmm DD YYYY',
+
+    // Abbreviated month uppercase
+    'YYMMMDD', 'DDMMMYY', 'MMMDDYY', 'YYYYMMMDD', 'DDMMMYYYY', 'MMMDDYYYY',
+    'YY/MMM/DD', 'DD/MMM/YY', 'MMM/DD/YY', 'YYYY/MMM/DD', 'DD/MMM/YYYY', 'MMM/DD/YYYY',
+    'YY-MMM-DD', 'DD-MMM-YY', 'MMM-DD-YY', 'YYYY-MMM-DD', 'DD-MMM-YYYY', 'MMM-DD-YYYY',
+    'YY MMM DD', 'DD MMM YY', 'MMM DD YY', 'YYYY MMM DD', 'DD MMM YYYY', 'MMM DD YYYY',
+
+    // Full month names (MMMM)
+    'YYMMMMDD', 'DDMMMMYY', 'MMMMDDYY', 'YYYYMMMMDD', 'DDMMMMYYYY', 'MMMMDDYYYY',
+    'YY/MMMM/DD', 'DD/MMMM/YY', 'MMMM/DD/YY', 'YYYY/MMMM/DD', 'DD/MMMM/YYYY', 'MMMM/DD/YYYY',
+    'YY-MMMM-DD', 'DD-MMMM-YY', 'MMMM-DD-YY', 'YYYY-MMMM-DD', 'DD-MMMM-YYYY', 'MMMM-DD-YYYY',
+    'YY MMMM DD', 'DD MMMM YY', 'MMMM DD YY', 'YYYY MMMM DD', 'DD MMMM YYYY', 'MMMM DD YYYY',
+
+    // Full month lowercase
+    'YYmmmmDD', 'DDmmmmYY', 'mmmmDDYY', 'YYYYmmmmDD', 'DDmmmmYYYY', 'mmmmDDYYYY',
+    'YY/mmmm/DD', 'DD/mmmm/YY', 'mmmm/DD/YY', 'YYYY/mmmm/DD', 'DD/mmmm/YYYY', 'mmmm/DD/YYYY',
+    'YY-mmmm-DD', 'DD-mmmm-YY', 'mmmm-DD-YY', 'YYYY-mmmm-DD', 'DD-mmmm-YYYY', 'mmmm-DD-YYYY',
+    'YY mmmm DD', 'DD mmmm YY', 'mmmm DD YY', 'YYYY mmmm DD', 'DD mmmm YYYY', 'mmmm DD YYYY',
+
+    // Full month uppercase
+    'YYMMMMDD', 'DDMMMMYY', 'MMMMDDYY', 'YYYYMMMMDD', 'DDMMMMYYYY', 'MMMMDDYYYY',
+    'YY/MMMM/DD', 'DD/MMMM/YY', 'MMMM/DD/YY', 'YYYY/MMMM/DD', 'DD/MMMM/YYYY', 'MMMM/DD/YYYY',
+    'YY-MMMM-DD', 'DD-MMMM-YY', 'MMMM-DD-YY', 'YYYY-MMMM-DD', 'DD-MMMM-YYYY', 'MMMM-DD-YYYY',
+    'YY MMMM DD', 'DD MMMM YY', 'MMMM DD YY', 'YYYY MMMM DD', 'DD MMMM YYYY', 'MMMM DD YYYY',
   ];
 
   @override
