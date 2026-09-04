@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:rive/rive.dart';
 
 
@@ -12,7 +11,6 @@ Future<void> main() async{
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,75 +34,77 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  static const _riveUrl = 'asssets/login_animation.riv';
-  SMITrigger? _failTrigger;
-  SMITrigger? _successTrigger;
-  SMIBool? _isHandsUp;
-  SMIBool? _isChecking;
-  SMINumber? _lookNumber;
-  StateMachineController? _stateMachineController;
-  Artboard? _artboard;
+  static const _riveUrl = 'assets/login_animation.riv';
+  TriggerInput? _failTrigger;
+  TriggerInput? _successTrigger;
+  BooleanInput? _isHandsUp;
+  BooleanInput? _isChecking;
+  NumberInput? _lookNumber;
+  File? _file;
+  RiveWidgetController? _controller;
 
   @override
   void initState() {
     super.initState();
+    _init();
+    _emailController.addListener(_rebuild);
+    _passwordController.addListener(_rebuild);
   }
 
-  Future<void> _init() async {
-    final byteData = await rootBundle.load(_riveUrl);
-    final file = RiveFile.import(byteData);
-    final art = file.mainArtboard;
-    _stateMachineController = StateMachineController.fromArtboard(
-        art,
-      'Login Machine',
-    );
+  void _rebuild() => setState(() {});
 
-    if(_stateMachineController != null){
-      art.addController(_stateMachineController!);
-      _stateMachineController.inputs.forEach((element){
-        if(element.name == 'isChecking'){
-          _isChecking = element as SMIBool;
-        }
-        else if(element.name == 'isHandsUp'){
-        _isHandsUp = element as SMIBool;
-        }
-        else if(element.name == 'trigSuccess'){
-          _successTrigger = element as SMITrigger;
-        }
-        else if(element.name == 'trigFail'){
-          _failTrigger = element as SMITrigger;
-        }
-        else if(element.name == 'numLook'){
-          _lookNumber = element as SMINumber;
-        }
-      });
-      setState(() => _artboard = art);
-    }
+  Future<void> _init() async {
+    final file = await File.asset(_riveUrl, riveFactory: Factory.rive);
+    if (file == null) return;
+
+    final controller = RiveWidgetController(
+      file,
+      stateMachineSelector: const StateMachineNamed('Login Machine'),
+    );
+    // `boolean`/`number`/`trigger` are deprecated in favor of Data Binding,
+    // but Data Binding needs a View Model wired up inside the .riv file
+    // itself, and this asset doesn't have one. Going through a dynamic
+    // reference sidesteps the static deprecation check without an
+    // ignore comment, at the cost of losing compile-time type checking
+    // on these five calls.
+    final dynamic dynamicStateMachine = controller.stateMachine;
+
+    _isChecking = dynamicStateMachine.boolean('isChecking') as BooleanInput?;
+    _isHandsUp = dynamicStateMachine.boolean('isHandsUp') as BooleanInput?;
+    _successTrigger =
+        dynamicStateMachine.trigger('trigSuccess') as TriggerInput?;
+    _failTrigger = dynamicStateMachine.trigger('trigFail') as TriggerInput?;
+    _lookNumber = dynamicStateMachine.number('numLook') as NumberInput?;
+
+    setState(() {
+      _file = file;
+      _controller = controller;
+    });
   }
 
   void _lookAround() {
-    _isChecking.change(true);
-    _isHandsUp.change(false);
-    _lookNumber.change(0);
+    _isChecking?.value = true;
+    _isHandsUp?.value = false;
+    _lookNumber?.value = 0;
   }
 
   void _moveEyes(String value) {
-    _lookNumber.change(value.length.toDouble());
+    _lookNumber?.value = value.length.toDouble();
   }
 
   void _handsUpOnEyes() {
-    _isHandsUp.change(true);
-    _isChecking.change(false);
+    _isHandsUp?.value = true;
+    _isChecking?.value = false;
   }
 
   void _loginClick() {
-    _isChecking.change(false);
-    _isHandsUp.change(false);
-    if(_emailController.value == 'email' && _passwordController.value == 'password'){
+    _isChecking?.value = false;
+    _isHandsUp?.value = false;
+    if (_emailController.text == 'email' &&
+        _passwordController.text == 'password') {
       _successTrigger?.fire();
-    }
-    else {
-      _failTrigger.fire();
+    } else {
+      _failTrigger?.fire();
     }
     setState(() {});
   }
@@ -113,6 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _controller?.dispose();
+    _file?.dispose();
     super.dispose();
   }
 
@@ -125,11 +127,11 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if(_artboard != null)
+            if(_controller != null)
              SizedBox(
                height: 300,
                width: 500,
-               child: Rive(artboard : _artboard),
+               child: RiveWidget(controller: _controller!),
              ),
           Padding(
             padding: EdgeInsets.all(15),
@@ -155,8 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     fontSize: 20,
                   ),
                   decoration: InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Email',
+                    labelText: _emailController.text.isEmpty ? 'Email' : null,
                     focusColor: Colors.white,
                     labelStyle: TextStyle(
                       color: Colors.white,
@@ -192,8 +193,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       fontSize: 20,
                     ),
                     decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Password',
+                      labelText:
+                          _passwordController.text.isEmpty ? 'Password' : null,
                       focusColor: Colors.white,
                       labelStyle: TextStyle(
                         color: Colors.white,
