@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:rive/rive.dart';
 
-void main() {
+
+Future<void> main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await RiveNative.init();
   runApp(const MyApp());
 }
 
@@ -13,110 +18,224 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
+
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  static const _riveUrl = 'asssets/login_animation.riv';
+  SMITrigger? _failTrigger;
+  SMITrigger? _successTrigger;
+  SMIBool? _isHandsUp;
+  SMIBool? _isChecking;
+  SMINumber? _lookNumber;
+  StateMachineController? _stateMachineController;
+  Artboard? _artboard;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<void> _init() async {
+    final byteData = await rootBundle.load(_riveUrl);
+    final file = RiveFile.import(byteData);
+    final art = file.mainArtboard;
+    _stateMachineController = StateMachineController.fromArtboard(
+        art,
+      'Login Machine',
+    );
+
+    if(_stateMachineController != null){
+      art.addController(_stateMachineController!);
+      _stateMachineController.inputs.forEach((element){
+        if(element.name == 'isChecking'){
+          _isChecking = element as SMIBool;
+        }
+        else if(element.name == 'isHandsUp'){
+        _isHandsUp = element as SMIBool;
+        }
+        else if(element.name == 'trigSuccess'){
+          _successTrigger = element as SMITrigger;
+        }
+        else if(element.name == 'trigFail'){
+          _failTrigger = element as SMITrigger;
+        }
+        else if(element.name == 'numLook'){
+          _lookNumber = element as SMINumber;
+        }
+      });
+      setState(() => _artboard = art);
+    }
+  }
+
+  void _lookAround() {
+    _isChecking.change(true);
+    _isHandsUp.change(false);
+    _lookNumber.change(0);
+  }
+
+  void _moveEyes(String value) {
+    _lookNumber.change(value.length.toDouble());
+  }
+
+  void _handsUpOnEyes() {
+    _isHandsUp.change(true);
+    _isChecking.change(false);
+  }
+
+  void _loginClick() {
+    _isChecking.change(false);
+    _isHandsUp.change(false);
+    if(_emailController.value == 'email' && _passwordController.value == 'password'){
+      _successTrigger?.fire();
+    }
+    else {
+      _failTrigger.fire();
+    }
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      backgroundColor: Colors.black87,
+      body: SingleChildScrollView(
+        child : Center(
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          children: [
+            if(_artboard != null)
+             SizedBox(
+               height: 300,
+               width: 500,
+               child: Rive(artboard : _artboard),
+             ),
+          Padding(
+            padding: EdgeInsets.all(15),
+            child: Container(
+              alignment: Alignment.center,
+              height: 80,
+              width: 400,
+              padding: EdgeInsets.only(bottom: 10),
+              margin: EdgeInsets.only(bottom: 32),
+              decoration: BoxDecoration(
+                color: Colors.black38,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey),
+              ),
+              child: Padding(
+                  padding: EdgeInsets.all(15),
+                child: TextFormField(
+                  onChanged: _moveEyes,
+                  onTap: _lookAround,
+                  controller: _emailController,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    hintText: 'Email',
+                    focusColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ),
             ),
+          ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15),
+              child: Container(
+                alignment: Alignment.center,
+                height: 80,
+                width: 400,
+                padding: EdgeInsets.only(bottom: 10),
+                margin: EdgeInsets.only(bottom: 32),
+                decoration: BoxDecoration(
+                  color: Colors.black38,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(15),
+                  child: TextFormField(
+                    onChanged: (value) => {},
+                    onTap: _handsUpOnEyes,
+                    controller: _passwordController,
+                    obscureText: true,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'Password',
+                      focusColor: Colors.white,
+                      labelStyle: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            MaterialButton(
+              onPressed: (){},
+              child: const Text(
+                'Not having account? Sign up!',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Container(
+              height: 50,
+              width: 250,
+              decoration: BoxDecoration(
+                color: Colors.blueGrey,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: MaterialButton(
+                onPressed: _loginClick,
+                child: const Text(
+                  'Login',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                  ),
+                ),
+              ),
+            )
           ],
         ),
+       ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
