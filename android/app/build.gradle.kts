@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.flutter_sample_apps"
-    compileSdk = 35
-    ndkVersion = "27.0.12077973"
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -24,8 +24,10 @@ android {
         applicationId = "com.example.flutter_sample_apps"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        multiDexEnabled = true
         minSdk = 30
-        targetSdk = 35
+        targetSdk = 36
+        buildToolsVersion = "34.0.0"
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
