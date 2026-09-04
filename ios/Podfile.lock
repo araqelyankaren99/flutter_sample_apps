@@ -1,3 +1,22 @@
-PODFILE CHECKSUM: 72d3a423a2ad52f694212f7ba4ac9ca21ac125e8
+PODS:
+  - Flutter (1.0.0)
+  - rive_native (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - rive_native (from `.symlinks/plugins/rive_native/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  rive_native:
+    :path: ".symlinks/plugins/rive_native/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  rive_native: 6fd739ece3e1976374c6804badde07053aa05b36
+
+PODFILE CHECKSUM: e30f02f9d1c72c47bb6344a0a748c9d268180865
 
 COCOAPODS: 1.16.2
