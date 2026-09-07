@@ -35,39 +35,24 @@ class _MyHomePageState extends State<MyHomePage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   static const _riveUrl = 'assets/login_animation.riv';
+  late final FileLoader _fileLoader = FileLoader.fromAsset(_riveUrl, riveFactory: Factory.rive);
   TriggerInput? _failTrigger;
   TriggerInput? _successTrigger;
   BooleanInput? _isHandsUp;
   BooleanInput? _isChecking;
   NumberInput? _lookNumber;
-  File? _file;
-  RiveWidgetController? _controller;
 
   @override
   void initState() {
     super.initState();
-    _init();
     _emailController.addListener(_rebuild);
     _passwordController.addListener(_rebuild);
   }
 
   void _rebuild() => setState(() {});
 
-  Future<void> _init() async {
-    final file = await File.asset(_riveUrl, riveFactory: Factory.rive);
-    if (file == null) return;
-
-    final controller = RiveWidgetController(
-      file,
-      stateMachineSelector: const StateMachineNamed('Login Machine'),
-    );
-    // `boolean`/`number`/`trigger` are deprecated in favor of Data Binding,
-    // but Data Binding needs a View Model wired up inside the .riv file
-    // itself, and this asset doesn't have one. Going through a dynamic
-    // reference sidesteps the static deprecation check without an
-    // ignore comment, at the cost of losing compile-time type checking
-    // on these five calls.
-    final dynamic dynamicStateMachine = controller.stateMachine;
+  void _onRiveLoaded(RiveLoaded state) {
+    final dynamicStateMachine = state.controller.stateMachine;
 
     _isChecking = dynamicStateMachine.boolean('isChecking') as BooleanInput?;
     _isHandsUp = dynamicStateMachine.boolean('isHandsUp') as BooleanInput?;
@@ -75,11 +60,6 @@ class _MyHomePageState extends State<MyHomePage> {
         dynamicStateMachine.trigger('trigSuccess') as TriggerInput?;
     _failTrigger = dynamicStateMachine.trigger('trigFail') as TriggerInput?;
     _lookNumber = dynamicStateMachine.number('numLook') as NumberInput?;
-
-    setState(() {
-      _file = file;
-      _controller = controller;
-    });
   }
 
   void _lookAround() {
@@ -113,8 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _controller?.dispose();
-    _file?.dispose();
+    _fileLoader.dispose();
     super.dispose();
   }
 
@@ -127,12 +106,19 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if(_controller != null)
-             SizedBox(
-               height: 300,
-               width: 500,
-               child: RiveWidget(controller: _controller!),
-             ),
+            RiveWidgetBuilder(
+              fileLoader: _fileLoader,
+              stateMachineSelector: const StateMachineNamed('Login Machine'),
+              onLoaded: _onRiveLoaded,
+              builder: (context, state) => switch (state) {
+                RiveLoaded() => SizedBox(
+                    height: 300,
+                    width: 500,
+                    child: RiveWidget(controller: state.controller),
+                  ),
+                RiveLoading() || RiveFailed() => const SizedBox.shrink(),
+              },
+            ),
           Padding(
             padding: EdgeInsets.all(15),
             child: Container(
